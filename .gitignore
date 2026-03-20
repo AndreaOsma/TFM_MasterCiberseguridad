@@ -28,7 +28,6 @@ code/terraform/.terraform.lock.hcl
 *.toc
 *.bbl
 *.blg
-*.pdf
 *.txt
 *.synctex.gz
 texput.log
