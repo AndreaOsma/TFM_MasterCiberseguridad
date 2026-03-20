@@ -1,0 +1,34 @@
+# === Reglas Generales ===
+.DS_Store
+Thumbs.db
+[Dd]esktop.ini
+
+# === Código ===
+!code/
+!setup_workstation.sh
+code/terraform/.terraform/
+code/terraform/*.tfstate*
+code/terraform/*.tfvars
+code/terraform/.terraform.lock.hcl
+
+# === LaTeX (Fuentes y Memoria) ===
+!main.tex
+!references.bib
+!*.bib
+!*.tex
+!images/
+"Bibliografía TFM/"
+
+# === LaTeX (Basura de compilación) ===
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.pdf
+*.txt
+*.synctex.gz
+texput.log
