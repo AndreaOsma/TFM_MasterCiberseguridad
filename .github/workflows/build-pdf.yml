@@ -19,7 +19,8 @@ jobs:
         uses: xu-cheng/latex-action@v3
         with:
           root_file: main.tex
-          compiler: xelatex  # Cambia pdflatex por xelatex si prefieres soporte nativo UTF-8
+          compiler: latexmk
+          docker_image: ghcr.io/xu-cheng/texlive-full:2024.01
           args: -pdf -interaction=nonstopmode -file-line-error
 
       - name: Crear Release y adjuntar PDF
