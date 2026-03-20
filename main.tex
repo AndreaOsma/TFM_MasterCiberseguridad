@@ -10,6 +10,7 @@
 \usepackage{geometry}
 \usepackage{booktabs}
 \usepackage{xcolor}
+\usepackage{glossaries}
 
 \onehalfspacing
 
@@ -23,6 +24,23 @@
     stringstyle=\color{green!50!black},
     showstringspaces=false,
     literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1 {Ñ}{{\~N}}1
+}
+
+\makeglossaries
+
+\newglossaryentry{oidc}{
+    name={OIDC},
+    description={OpenID Connect. Capa de identidad basada en el protocolo OAuth 2.0 que permite a los clientes verificar la identidad de una entidad.}
+}
+
+\newglossaryentry{secretsprawl}{
+    name={Secret Sprawl},
+    description={Dispersión descontrolada de credenciales (claves API, certificados, tokens) a lo largo del ciclo de vida del desarrollo de software.}
+}
+
+\newglossaryentry{zerotrust}{
+    name={Zero Trust},
+    description={Modelo de ciberseguridad que asume que no existe confianza implícita concedida a los activos o cuentas basándose únicamente en su ubicación física o de red.}
 }
 
 
@@ -236,6 +254,8 @@ La integración de una bóveda criptográfica centralizada, combinada con la fed
 
 En conclusión, desplazar la seguridad hacia las fases iniciales del desarrollo (\textit{shift-left}) y basar el acceso en validaciones dinámicas de identidad transforma la postura defensiva de la organización, mitigando de forma medible la problemática del \textit{Secret Sprawl} y preparando la infraestructura para futuras adopciones de nubes híbridas.
 
+\newpage
+\printglossaries
 
 \nocite{*}
 \newpage
