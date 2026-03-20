@@ -191,14 +191,34 @@ La orquestación de la seguridad y el control de accesos se define íntegramente
 Esta estrategia permite versionar la infraestructura de seguridad directamente en el repositorio de Gitea. Al aplicar los cambios de estado de forma determinista, se garantiza la inmutabilidad del entorno y se elimina la configuración manual.  Al prescindir de interfaces gráficas y operar exclusivamente mediante CLI, cualquier modificación en los roles o en los tiempos de vida (TTL) de los secretos queda registrada en el control de versiones, habilitando un proceso de revisión por pares (Pull Requests) antes de su aplicación en producción.
 
 \subsubsection{Instalación de dependencias en Proxmox}
-\lstinputlisting[language=bash, caption={Instalación de dependencias}, label={lst:setup}]{code/setup_proxmox.sh}
+Para garantizar la reproducibilidad del entorno de laboratorio en el hipervisor Proxmox, la fase inicial del despliegue requiere la preparación del host. Este proceso se ha automatizado mediante un script de inicialización (\textit{shell script}) que estandariza las dependencias operativas antes de la ejecución de cualquier manifiesto declarativo.
+
+El script cumple tres funciones críticas en la cadena de aprovisionamiento:
+
+\begin{itemize}
+    \item \textbf{Gestión de Repositorios y Paquetes:} Se integran las claves GPG oficiales de HashiCorp en el anillo de claves del sistema para validar la autenticidad de los binarios, procediendo a la instalación de Terraform y Ansible. La presencia de estas herramientas en el nodo de control es un prerrequisito para ejecutar la orquestación.
+    \item \textbf{Obtención de Imágenes Cloud-Init:} Para el despliegue de la máquina virtual destinada al clúster de K3s, se requiere una imagen base preparada para la inyección de metadatos. El script descarga la imagen genérica oficial de Debian 12 (\texttt{qcow2}) y la aprovisiona en el almacenamiento local del hipervisor (\texttt{/var/lib/vz/template/iso}).
+    \item \textbf{Estandarización del Formato:} La imagen descargada se renombra automáticamente con la extensión \texttt{.img}, un requisito del proveedor de Terraform para Proxmox al procesar plantillas pre-configuradas de Cloud-Init.
+\end{itemize}
+
+Una vez finalizada la ejecución de este script, el host expone las capacidades necesarias para interpretar los manifiestos HCL y aplicar las configuraciones post-despliegue, cerrando la brecha entre la infraestructura vacía y el inicio del ciclo de vida definido por software.
+
+\lstinputlisting[language=bash, caption={Instalación de dependencias en Proxmox}, label={lst:setup}]{code/setup_proxmox.sh}
+
+\subsubsection{Aprovisionamiento Declarativo con Terraform}
+
+Con el host preparado tras la ejecución del script de inicialización, la instanciación de la infraestructura se lleva a cabo mediante el archivo \texttt{main.tf}. Este manifiesto utiliza el proveedor \texttt{bpg/proxmox} para interactuar con la API del hipervisor. Dado que se opera en un entorno local, se define el parámetro \texttt{insecure = true} para permitir la comunicación sin requerir una CA interna.
+
+El punto crítico para mantener la automatización ininterrumpida es la directiva \texttt{user\_account}, la cual inyecta la variable \texttt{var.ssh\_public\_key} en cada nodo. Esta acción garantiza que, desde el primer segundo de vida del sistema operativo, el entorno cuente con acceso por clave asimétrica. Esto erradica el uso de credenciales por defecto y deja la infraestructura inmediatamente accesible para la posterior configuración de los servicios.
+
+\lstinputlisting[language=bash, caption={Aprovisionamiento de infraestructura lógica mediante Terraform}, label={lst:terraform-main}]{code/terraform/main.tf}
 
 \subsection*{Generación Dinámica de Credenciales en PostgreSQL}
 Tras la autenticación exitosa del pipeline de CI/CD mediante OIDC , la carga de trabajo requiere acceso al motor de base de datos relacional ubicado en el LXC 3. En lugar de inyectar una cadena de conexión estática, el runner realiza una petición a la API de Vault.Vault, configurado previamente con el motor de base de datos (Database Secrets Engine), interactúa de forma nativa con PostgreSQL  para crear un rol de usuario efímero con permisos limitados (ej. \texttt{SELECT} sobre tablas específicas).  Esta credencial se devuelve al runner en memoria. Una vez finalizado el TTL estipulado, o al concluir la ejecución del trabajo, Vault ejecuta automáticamente una sentencia \texttt{DROP ROLE} en la base de datos, revocando el acceso y eliminando cualquier rastro de la credencial.
 
 En el código \ref{lst:terraform-postgres} se detalla la configuración declarativa mediante Terraform para aprovisionar el motor de secretos de base de datos en Vault. Este manifiesto establece la conexión con la instancia de PostgreSQL alojada en el LXC 3 y define las sentencias SQL parametrizadas que el sistema ejecutará en tiempo real para generar credenciales de solo lectura.
 
-\lstinputlisting[language=bash, caption={Aprovisionamiento de motor de base de datos dinámico en Vault mediante Terraform (HCL)}, label={lst:terraform-postgres}]{code/terraform/main.tf}
+% \lstinputlisting[language=bash, caption={Aprovisionamiento de motor de base de datos dinámico en Vault mediante Terraform (HCL)}, label={lst:terraform-postgres}]{code/terraform/postgres.tf}
 
 Al aplicar este manifiesto, la lógica de creación de usuarios queda versionada e inmutable. El comportamiento esperado es que, ante cualquier intento de acceso lateral, la caducidad inherente del usuario (300 segundos) mitigue de forma severa la ventana de exposición del dato.
 
