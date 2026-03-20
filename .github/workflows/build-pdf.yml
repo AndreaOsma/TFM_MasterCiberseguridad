@@ -15,11 +15,11 @@ jobs:
       - name: Checkout del código fuente
         uses: actions/checkout@v4
 
-      - name: Compilar documento
+      - name: Compile LaTeX document
         uses: xu-cheng/latex-action@v3
         with:
           root_file: main.tex
-          compiler: latexmk
+          compiler: xelatex  # Cambia pdflatex por xelatex si prefieres soporte nativo UTF-8
           args: -pdf -interaction=nonstopmode -file-line-error
 
       - name: Crear Release y adjuntar PDF
