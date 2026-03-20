@@ -1,0 +1,12 @@
+\glossarysection[\glossarytoctitle]{\glossarytitle}\glossarypreamble
+\begin{theglossary}\glossaryheader
+\glsgroupheading{G}\relax \glsresetentrylist %
+\glossentry{oidc}{\glossaryentrynumbers{\relax 
+		\setentrycounter[]{page}\glsnumberformat{18}}}\glsgroupskip
+\glsgroupheading{S}\relax \glsresetentrylist %
+\glossentry{secretsprawl}{\glossaryentrynumbers{\relax 
+		\setentrycounter[]{page}\glsnumberformat{18}}}\glsgroupskip
+\glsgroupheading{Z}\relax \glsresetentrylist %
+\glossentry{zerotrust}{\glossaryentrynumbers{\relax 
+		\setentrycounter[]{page}\glsnumberformat{18}}}%
+\end{theglossary}\glossarypostamble
