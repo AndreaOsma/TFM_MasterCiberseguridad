@@ -183,6 +183,13 @@ La topología de red y computación se segmenta utilizando una combinación de c
     \item \textbf{VM 1 (K3s v1.28):} Clúster de Kubernetes ligero sobre una distribución Debian minimalista. El uso de una máquina virtual proporciona aislamiento a nivel de kernel, lo cual mitiga vectores de escape de contenedores.
 \end{itemize}
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{diagrams/topologia.png}
+    \caption{Arquitectura DevSecOps y flujo de inyección dinámica de credenciales en el laboratorio \textit{on-premise}.}
+    \label{fig:topologia}
+\end{figure}
+
 Fomentando una operativa técnica ágil, la administración del entorno y la configuración de políticas en Vault se realiza de forma exclusiva mediante su CLI y la edición de manifiestos con \texttt{vi}. Esto permite una integración natural con repositorios de Infraestructura como Código (Terraform) y mantiene un registro de auditoría estricto, prescindiendo totalmente de interfaces gráficas.
 
 \subsection{Estrategia de Despliegue mediante IaC}
