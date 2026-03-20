@@ -29,5 +29,9 @@ code/terraform/.terraform.lock.hcl
 *.bbl
 *.blg
 *.txt
+*.glo
+*.gls
+*.glg
+*.ist
 *.synctex.gz
 texput.log
