@@ -3091,6 +3091,17 @@
     <bcf:citekey order="13" intorder="1">vault_database_secrets_engine</bcf:citekey>
     <bcf:citekey order="14" intorder="1">terraform_documentation</bcf:citekey>
     <bcf:citekey order="14" intorder="2">vault_database_secrets_engine</bcf:citekey>
+    <bcf:citekey order="15" intorder="1">vault_database_secrets_engine</bcf:citekey>
+    <bcf:citekey order="15" intorder="2">vault_audit_devices</bcf:citekey>
+    <bcf:citekey order="15" intorder="3">terraform_documentation</bcf:citekey>
+    <bcf:citekey order="16" intorder="1">vault_database_secrets_engine</bcf:citekey>
+    <bcf:citekey order="17" intorder="1">vault_audit_devices</bcf:citekey>
+    <bcf:citekey order="17" intorder="2">nist_sp800_207</bcf:citekey>
+    <bcf:citekey order="18" intorder="1">terraform_documentation</bcf:citekey>
+    <bcf:citekey order="19" intorder="1">owasp_secrets_management_cheat_sheet</bcf:citekey>
+    <bcf:citekey order="19" intorder="2">github_secret_scanning</bcf:citekey>
+    <bcf:citekey order="19" intorder="3">vault_audit_devices</bcf:citekey>
+    <bcf:citekey order="20" intorder="1">vault_audit_devices</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="apa">

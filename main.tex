@@ -9,14 +9,11 @@
 \usepackage{listings}
 \usepackage{geometry}
 \usepackage{booktabs}
-\usepackage{xcolor}
 \usepackage[automake=delayed]{glossaries}
 \usepackage[backend=biber,style=apa]{biblatex}
 \usepackage{csquotes}
-\usepackage{hyperref}
 
 \usepackage[dvipsnames]{xcolor}
-\usepackage{hyperref}
 
 \hypersetup{
     hidelinks,
@@ -37,6 +34,7 @@
 \lstset{
     basicstyle=\ttfamily\footnotesize,
     breaklines=true,
+    breakatwhitespace=true,
     frame=lines,
     captionpos=b,
     keywordstyle=\color{blue},
@@ -372,27 +370,54 @@ En la configuración de Terraform se detalla la lógica declarativa para aprovis
 
 Al aplicar este manifiesto, la lógica de creación de usuarios queda versionada e inmutable. El comportamiento esperado es que, ante cualquier intento de acceso lateral, la caducidad inherente del usuario (300 segundos) mitigue de forma severa la ventana de exposición del dato.
 
+\subsection{Metodología de evaluación}
+La validación de la arquitectura se basa en criterios funcionales y en evidencia observables en el laboratorio. En concreto, se considera que el diseño funciona si se cumple lo siguiente: (1) la emisión de credenciales para acceso a base de datos es efímera y conduce a la revocación del rol mediante la operación \texttt{DROP ROLE}; (2) la trazabilidad de accesos se materializa en eventos de auditoría en formato JSON generados por \gls{vault}; y (3) la configuración del entorno y de las políticas se puede reproducir a partir de manifiestos declarativos versionados con Terraform \parencite{vault_database_secrets_engine,vault_audit_devices,terraform_documentation}.
+
+Las fuentes de evidencia utilizadas incluyen la topología del laboratorio (Figura \ref{fig:topologia}), la automatización del host (Listado \ref{lst:setup}) y la lógica de aprovisionamiento declarativo (Listado \ref{lst:terraform-main}).
+
 \section{Resultados}
 
 \subsection{Emisión dinámica de credenciales (TTL) y revocación}
-Durante la ejecución del flujo propuesto, la credencial se obtiene de forma efímera a partir de Vault, asociada a un Tiempo de Vida (TTL) configurado para limitar el periodo de exposición del secreto. La lógica de integración fuerza que, una vez concluido el TTL o el trabajo de CI/CD finalizado, el acceso sea revocado mediante la sentencia \texttt{DROP ROLE} en PostgreSQL, eliminando la credencial y reduciendo la superficie temporal susceptible de abuso.
+Durante la ejecución del flujo propuesto, el runner obtiene credenciales de forma efímera a partir de \gls{vault}, asociadas a un \gls{ttl} configurado para limitar el periodo de exposición del secreto. La evidencia funcional se sustenta en que el aprovisionamiento de la lógica de emisión y revocación se define mediante manifiestos Terraform (Listado \ref{lst:terraform-main}) que conectan \gls{vault} con PostgreSQL y gobiernan el comportamiento de acceso. En consecuencia, al finalizar el trabajo (y/o expirar el periodo asociado al \gls{ttl}), el acceso se revoca mediante \texttt{DROP ROLE} en PostgreSQL, eliminando el rol efímero y reduciendo el impacto temporal de una posible exposición \parencite{vault_database_secrets_engine}.
+
+El entorno que soporta esta secuencia está descrito en la Figura \ref{fig:topologia}.
 
 \subsection{Trazabilidad de auditoría y detección}
-La habilitación del motor de auditoría de Vault permite registrar cada interacción en formato JSON, conservando información relevante para la trazabilidad: entidad solicitante, política evaluada, ruta del secreto y marca temporal. Esta granularidad facilita la exportación y correlación de eventos hacia un sistema de monitorización (p. ej., SIEM), habilitando la detección de anomalías asociadas a intentos fallidos o patrones de acceso no esperados.
+La segunda dimensión evaluada es la trazabilidad. El motor de auditoría de \gls{vault} registra cada interacción en formato JSON con campos consistentes (identidad solicitante, política evaluada, ruta del secreto y timestamp). Esta evidencia se alinea con la arquitectura del laboratorio descrita en la Figura \ref{fig:topologia} y facilita la correlación de eventos hacia un sistema de monitorización tipo \gls{siem}, habilitando la detección de anomalías asociadas a intentos fallidos o patrones de acceso no esperados \parencite{vault_audit_devices,nist_sp800_207}.
 
 \subsection{Reproducibilidad del despliegue mediante IaC}
-El despliegue del laboratorio on-premise se automatiza mediante Terraform a partir de manifiestos declarativos (HCL). El versionado del estado de la infraestructura, junto con el control de cambios a través de revisiones (Pull Requests), aporta repetibilidad al entorno y reduce la deriva operativa entre ejecuciones. Este resultado refuerza la hipótesis de que la gestión de seguridad puede codificarse e implementarse de forma consistente en fases tempranas del SDLC.
+La reproducibilidad del despliegue se valida verificando que el laboratorio on-premise se construye desde código versionado y declarativo. El aprovisionamiento del host se automatiza mediante el script del Listado \ref{lst:setup}, mientras que la configuración de políticas, motores y roles se define a través de manifiestos Terraform (Listado \ref{lst:terraform-main}). Este enfoque reduce la deriva operativa entre ejecuciones y refuerza la hipótesis de una implementación inmutable y auditable en el \gls{sdlc} \parencite{terraform_documentation}.
 
 \section{Discusión}
 
+\subsection{Matriz hipótesis-evidencia}
+\begin{center}
+\begin{tabular}{@{}l l l@{}}
+\toprule
+Hipótesis & Evidencia en el laboratorio & Conclusión \\
+\midrule
+H1: Basar el acceso en \gls{zerotrust} y emitir credenciales dinámicas reduce el margen temporal de exposición. &
+Emisión efímera + revocación mediante \texttt{DROP ROLE}; coherencia con el flujo de emisión descrito. &
+Apoyada (funcional) \\
+H2: Integrar controles de seguridad en el \gls{cicd} reduce persistencia de secretos. &
+Arquitectura orientada a prevención y trazabilidad; sin métricas cuantitativas de tasa de hallazgos en esta versión. &
+Parcial (funcional + trazabilidad) \\
+H3: Orquestar con IaC mejora reproducibilidad e invariabilidad operativa. &
+Despliegue reproducible desde manifiestos y scripts versionados (Listados \ref{lst:setup} y \ref{lst:terraform-main}). &
+Apoyada (funcional) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
 \subsection{Confirmación de hipótesis y relación con el Secret Sprawl}
-Los resultados observados en el laboratorio respaldan la hipótesis principal: la sustitución de credenciales estáticas por emisión dinámica reduce el tiempo durante el cual un secreto podría ser reutilizado tras una potencial exposición. Asimismo, la integración transversal de controles de seguridad en el pipeline (p. ej., escaneos de secretos y auditoría) contribuye a disminuir la probabilidad de que el Secret Sprawl se materialice en repositorios o artefactos.
+Los resultados observados en el laboratorio respaldan la hipótesis principal: la sustitución de credenciales estáticas por emisión dinámica reduce el tiempo durante el cual una credencial podría reutilizarse tras una potencial exposición, mitigando \gls{secretsprawl}. Además, la trazabilidad habilitada en \gls{vault} y la arquitectura orientada a prevención son coherentes con buenas prácticas de secret management y secret scanning \parencite{owasp_secrets_management_cheat_sheet,github_secret_scanning,vault_audit_devices}.
 
 \subsection{Amenazas a la validez y limitaciones}
-Como limitación, el estudio se basa en un entorno de laboratorio on-premise con componentes específicos (Proxmox, LXC, k3s, Vault y PostgreSQL). La validez externa queda condicionada por la replicabilidad de la configuración y por la calidad de las políticas implementadas. Además, la medición cuantitativa (p. ej., latencias, distribución estadística de tiempos de emisión/revocación o tasa de falsos positivos en detección) no se detalla en esta versión del TFM, por lo que la evaluación se centra en evidencia funcional y trazabilidad operacional.
+Como limitación, el estudio se basa en un entorno de laboratorio on-premise con componentes específicos (Proxmox, LXC, k3s, \gls{vault} y PostgreSQL). La validez externa queda condicionada por la replicabilidad de la configuración y por la calidad de las políticas implementadas. Además, la medición cuantitativa (p. ej., latencias, distribución estadística de tiempos de emisión/revocación o tasa de falsos positivos en detección) no se detalla en esta versión del TFM, por lo que la evaluación se centra en evidencia funcional y trazabilidad operacional.
+
 
 \subsection{Trabajo futuro}
-Como trabajo futuro se recomienda ampliar el conjunto de pruebas con escenarios de fallo (p. ej., denegaciones por políticas, roturas de validación OIDC, fallos transitorios del motor de auditoría), incorporar métricas cuantitativas del pipeline y realizar correlación real de eventos hacia un SIEM. También sería deseable evaluar otras superficies de secretos (certificados, llaves de cifrado, credenciales de servicios) para generalizar el impacto de la arquitectura propuesta.
+Como trabajo futuro se recomienda ampliar el conjunto de pruebas con escenarios de fallo (p. ej., denegaciones por políticas, roturas de validación OIDC, fallos transitorios del motor de auditoría), incorporar métricas cuantitativas del pipeline y realizar correlación real de eventos hacia un sistema de monitorización tipo \gls{siem}. También sería deseable evaluar otras superficies de secretos (certificados, llaves de cifrado, credenciales de servicios) para generalizar el impacto de la arquitectura propuesta \parencite{vault_audit_devices}.
 
 \section{Conclusiones}
 La implementación y evaluación del laboratorio \textit{on-premise} demuestra la viabilidad técnica de erradicar los secretos estáticos en infraestructuras locales con altos requisitos de aislamiento.
