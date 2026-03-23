@@ -3,9 +3,8 @@
 Thumbs.db
 [Dd]esktop.ini
 
-# === Para luego ===
-Presentacion.md
-presentacion_tfm_marp.md
+# === Documentación derivada ===
+presentacion_tfm_marp.html
 
 # === Código ===
 !code/

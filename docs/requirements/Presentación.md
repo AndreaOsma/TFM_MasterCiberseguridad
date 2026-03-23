@@ -30,9 +30,17 @@ funcionalidades.
 
 He dejado preparada una presentación en formato **Marp** (cumple el rango de 15-25 diapositivas) en:
 
-- `presentacion_tfm_marp.md`
+- `../presentation/presentacion_tfm_marp.md`
 
 Para exportarla:
 
 - Opción 1 (fácil): **VSCode + extensión Marp** -> Exportar a `PDF` (o `HTML`).
-- Opción 2 (CLI): `npx @marp-team/marp-cli@latest presentacion_tfm_marp.md --pdf`
+- Opción 2 (CLI): `npx @marp-team/marp-cli@latest ../presentation/presentacion_tfm_marp.md --pdf`
+
+## Entrada de blog (lista para entregar)
+
+He dejado redactada la entrada en:
+
+- `../blog/entrada_blog_tfm.md`
+
+Formato: lenguaje llano, enfoque divulgativo-técnico, longitud aproximada de 1-2 páginas e incluye los diagramas del TFM.

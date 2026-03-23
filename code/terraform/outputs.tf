@@ -45,3 +45,11 @@ output "vm_k3s_info" {
     name      = proxmox_virtual_environment_vm.vm_k3s.name
   }
 }
+
+output "vault_bootstrap_enabled" {
+  value = var.enable_vault_bootstrap
+}
+
+output "vault_db_role_name" {
+  value = var.enable_vault_bootstrap ? vault_database_secret_backend_role.readonly[0].name : null
+}

@@ -6,16 +6,14 @@ Este repositorio contiene la **Infraestructura como Código (IaC)** para el desp
 
 ## Estructura del Proyecto
 
-
-
 * **code/terraform/**: Definición de recursos en Proxmox (LXC y VMs).
-
 * **code/ansible/**: Playbooks para la configuración de servicios (Vault, K3s, PostgreSQL).
-
-* **setup_proxmox.sh**: Script de inicialización y descarga de assets en el nodo Proxmox.
-
+* **code/setup_proxmox.sh**: Script de inicialización y descarga de assets en el nodo Proxmox.
+* **docs/requirements/**: Requisitos de entrega y checklist de presentación.
+* **docs/presentation/**: Presentación Marp editable.
+* **docs/blog/**: Entrada de blog editable.
+* **artifacts/**: Salidas renderizadas y entregables generados (PDF/HTML, etc.).
 * **main.tex**: Documento principal de la memoria técnica.
-
 * **references.bib**: Gestión de bibliografía.
 
 

@@ -1,0 +1,110 @@
+---
+- name: Configure LXC Vault node
+  hosts: vault_servers
+  become: true
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install base packages
+      ansible.builtin.apt:
+        name: "{{ common_packages + ['jq', 'unzip'] }}"
+        state: present
+
+    - name: Add HashiCorp apt keyring
+      ansible.builtin.shell: |
+        set -euo pipefail
+        wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor >/usr/share/keyrings/hashicorp-archive-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+    - name: Add HashiCorp apt repository
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/hashicorp.list
+        content: "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com bookworm main\n"
+        mode: "0644"
+
+    - name: Install Vault package
+      ansible.builtin.apt:
+        update_cache: true
+        name: "vault={{ vault_version }}*"
+        state: present
+
+    - name: Create Vault configuration directory
+      ansible.builtin.file:
+        path: /etc/vault.d
+        state: directory
+        owner: vault
+        group: vault
+        mode: "0750"
+
+    - name: Configure Vault server
+      ansible.builtin.copy:
+        dest: /etc/vault.d/vault.hcl
+        owner: vault
+        group: vault
+        mode: "0640"
+        content: |
+          ui = true
+          disable_mlock = true
+          api_addr = "{{ vault_api_addr }}"
+          cluster_addr = "http://192.168.1.220:8201"
+          cluster_name = "{{ vault_cluster_name }}"
+          storage "raft" {
+            path = "/opt/vault/data"
+            node_id = "vault-1"
+          }
+          listener "tcp" {
+            address     = "0.0.0.0:8200"
+            tls_disable = 1
+          }
+
+    - name: Ensure Vault data directory exists
+      ansible.builtin.file:
+        path: /opt/vault/data
+        state: directory
+        owner: vault
+        group: vault
+        mode: "0750"
+
+    - name: Install container-compatible Vault systemd unit
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/vault.service
+        mode: "0644"
+        content: |
+          [Unit]
+          Description=HashiCorp Vault
+          After=network-online.target
+          Wants=network-online.target
+
+          [Service]
+          User=vault
+          Group=vault
+          ExecStart=/usr/bin/vault server -config=/etc/vault.d/vault.hcl
+          ExecReload=/bin/kill --signal HUP $MAINPID
+          KillMode=process
+          KillSignal=SIGINT
+          Restart=on-failure
+          RestartSec=5
+          LimitNOFILE=65536
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Reload systemd for Vault unit override
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Enable and start Vault
+      ansible.builtin.systemd:
+        name: vault
+        enabled: true
+        state: started
+
+    - name: Create marker for vault node
+      ansible.builtin.copy:
+        dest: /etc/tfm-node-role
+        content: "vault-server\n"
+        mode: "0644"

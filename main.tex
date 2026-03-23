@@ -24,9 +24,10 @@
 \setcounter{glsnum}{0}
 
 \renewcommand*{\glstextformat}[1]{
-  \begin{NoHyper}#1\end{NoHyper}
-  \stepcounter{glsnum}
-  \hyperlink{glo:\glslabel}{\textsuperscript{\textcolor{MidnightBlue}{\theglsnum}}}
+  \begin{NoHyper}#1\end{NoHyper}%
+  \nobreak\hspace{0pt}%
+  \stepcounter{glsnum}%
+  \hyperlink{glo:\glslabel}{\textsuperscript{\textcolor{MidnightBlue}{\theglsnum}}}%
 }
 
 \onehalfspacing
@@ -305,6 +306,13 @@ El desafío técnico más complejo en la automatización de secretos es el méto
 
 Al emplear federación de identidades (\gls{oidc}) para los flujos de integración continua, el pipeline presenta a la bóveda un token criptográfico firmado temporalmente por el proveedor de CI/CD. La bóveda verifica la firma pública de este token frente a las claves públicas del proveedor. En consecuencia, el código fuente y los manifiestos de despliegue permanecen completamente limpios de material criptográfico persistente. Se espera que este diseño acote significativamente la superficie de exposición en los repositorios de código, si bien la integridad total depende de la robustez del proveedor de identidades externo, constituyendo un comportamiento esperado de mitigación, no una protección absoluta ante vulnerabilidades de terceros \parencite{oidc_core_1_0}.
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{diagrams/flujo_oidc_secrets.png}
+    \caption{Secuencia de autenticación federada mediante OIDC y emisión/revocación de credenciales efímeras en Vault para acceso temporal a PostgreSQL.}
+    \label{fig:flujo-oidc-secrets}
+\end{figure}
+
 \subsection{Despliegue Inmutable y Operativa de Ingeniería}
 La abstracción de toda la infraestructura y configuración de seguridad se define mediante manifiestos declarativos. La inicialización de la bóveda, la definición de roles y la asignación de políticas de acceso se gestionan como código, permitiendo un versionado estricto y un control de cambios mediante flujos de revisión. 
 
@@ -361,6 +369,59 @@ El punto crítico para mantener la automatización ininterrumpida es la directiv
 
 \lstinputlisting[language=bash, caption={Aprovisionamiento de infraestructura lógica mediante Terraform}, label={lst:terraform-main}]{code/terraform/main.tf}
 
+\subsubsection{Configuración post-despliegue con Ansible}
+Una vez aprovisionados los nodos base mediante Terraform, la configuración de servicios se ejecuta con Ansible para mantener separación de responsabilidades entre infraestructura y estado de aplicación. El playbook orquestador define una secuencia idempotente por rol técnico (Gitea Runner, Vault, PostgreSQL y K3s), permitiendo repetir el proceso sin introducir deriva en configuraciones ya convergidas.
+
+\lstinputlisting[language=bash, caption={Orquestación de configuración por nodo mediante Ansible}, label={lst:ansible-site}]{code/ansible/playbooks/site.yml}
+
+En particular, el nodo de \gls{vault} se configura con un playbook dedicado que instala el binario desde repositorio oficial, define \texttt{vault.hcl}, habilita almacenamiento local tipo \gls{raft} y asegura la activación del servicio. Esta separación favorece trazabilidad operativa y revisión por pares de cambios de hardening y disponibilidad.
+
+\lstinputlisting[language=bash, caption={Configuración del nodo Vault mediante Ansible}, label={lst:ansible-vault}]{code/ansible/playbooks/lxc_vault.yml}
+
+\subsubsection{Anexo de código fuente del laboratorio}
+Para garantizar trazabilidad completa del entregable técnico, se incorpora a continuación el conjunto de ficheros de automatización que componen el despliegue y la configuración del laboratorio (excluyendo exclusivamente scripts de generación de diagramas).
+
+\paragraph{Guía de lectura del anexo}
+El anexo se organiza siguiendo el mismo flujo operativo del laboratorio:
+\begin{enumerate}
+    \item \textbf{Definición de infraestructura (Terraform):} primero se declaran variables de entrada, recursos y salidas para trazabilidad.
+    \item \textbf{Configuración de secretos dinámicos (Vault):} se habilita el \textit{database secrets engine}, la conexión a PostgreSQL y el rol de emisión efímera.
+    \item \textbf{Convergencia de servicios (Ansible):} se aplica configuración post-despliegue por rol de nodo (runner, vault, base de datos y clúster).
+    \item \textbf{Automatización de inventario:} se deriva inventario Ansible a partir de \texttt{terraform output} para reducir errores manuales.
+\end{enumerate}
+
+\paragraph{Criterios técnicos documentados}
+La inclusión de estos ficheros no persigue únicamente exhaustividad, sino demostrar propiedades verificables del diseño:
+\begin{itemize}
+    \item \textbf{Idempotencia:} los playbooks de Ansible están estructurados para re-ejecución segura sin efectos colaterales sobre estados convergidos.
+    \item \textbf{Separación de responsabilidades:} Terraform gestiona estado de infraestructura; Ansible gestiona estado de servicio y hardening básico.
+    \item \textbf{Trazabilidad de cambios:} variables, outputs, políticas y scripts quedan versionados y auditables en repositorio.
+    \item \textbf{Control de secretos:} credenciales sensibles se parametrizan (no embebidas en código), y la emisión de acceso a datos se modela con TTL y revocación.
+\end{itemize}
+
+\paragraph{Cobertura funcional del código incluido}
+Los listados de Terraform (\texttt{variables.tf}, \texttt{main.tf}, \texttt{outputs.tf} y \texttt{vault\_bootstrap.tf}) cubren aprovisionamiento de cómputo, red, autenticación de proveedor y bootstrap de secretos dinámicos. Los listados de Ansible (\texttt{ansible.cfg}, inventario, \texttt{group\_vars} y playbooks por nodo) cubren instalación de dependencias, activación de servicios, configuración mínima de Vault/K3s/PostgreSQL y etiquetado funcional del nodo para validación posterior.
+
+\lstinputlisting[language=bash, caption={Variables de entrada para Terraform}, label={lst:terraform-vars}]{code/terraform/variables.tf}
+
+\lstinputlisting[language=bash, caption={Outputs de Terraform para trazabilidad de recursos}, label={lst:terraform-outputs}]{code/terraform/outputs.tf}
+
+\lstinputlisting[language=bash, caption={Bootstrap de Vault y motor dinámico de base de datos en Terraform}, label={lst:terraform-vault-bootstrap}]{code/terraform/vault_bootstrap.tf}
+
+\lstinputlisting[language=bash, caption={Configuración global de Ansible}, label={lst:ansible-cfg}]{code/ansible/ansible.cfg}
+
+\lstinputlisting[language=bash, caption={Inventario del laboratorio en Ansible}, label={lst:ansible-inventory}]{code/ansible/inventories/lab/hosts.yml}
+
+\lstinputlisting[language=bash, caption={Variables compartidas de Ansible para todos los nodos}, label={lst:ansible-groupvars}]{code/ansible/group_vars/all.yml}
+
+\lstinputlisting[language=bash, caption={Playbook de configuración para nodo Gitea Runner}, label={lst:ansible-gitea}]{code/ansible/playbooks/lxc_gitea.yml}
+
+\lstinputlisting[language=bash, caption={Playbook de configuración para nodo PostgreSQL}, label={lst:ansible-postgres}]{code/ansible/playbooks/lxc_postgres.yml}
+
+\lstinputlisting[language=bash, caption={Playbook de configuración para nodo K3s}, label={lst:ansible-k3s}]{code/ansible/playbooks/vm_k3s.yml}
+
+\lstinputlisting[language=bash, caption={Script de generación de inventario Ansible a partir de outputs Terraform}, label={lst:ansible-inventory-render}]{code/ansible/scripts/render_inventory_from_tf.sh}
+
 \subsection*{Generación Dinámica de Credenciales en PostgreSQL}
 Tras la autenticación exitosa del pipeline de CI/CD mediante \gls{oidc}, la carga de trabajo requiere acceso al motor de base de datos relacional ubicado en el \gls{lxc} 3. En lugar de inyectar una cadena de conexión estática, el runner realiza una petición a la API de \gls{vault}, configurado previamente con el motor de base de datos (Database Secrets Engine), interactúa de forma nativa con PostgreSQL para crear un rol de usuario efímero con permisos limitados (ej. \texttt{SELECT} sobre tablas específicas). Esta credencial se devuelve al runner en memoria. Una vez finalizado el TTL estipulado, o al concluir la ejecución del trabajo, \gls{vault} ejecuta automáticamente una sentencia \texttt{DROP ROLE} en la base de datos, revocando el acceso y eliminando cualquier rastro de la credencial \parencite{vault_database_secrets_engine}.
 
@@ -373,12 +434,62 @@ Al aplicar este manifiesto, la lógica de creación de usuarios queda versionada
 \subsection{Metodología de evaluación}
 La validación de la arquitectura se basa en criterios funcionales y en evidencia observables en el laboratorio. En concreto, se considera que el diseño funciona si se cumple lo siguiente: (1) la emisión de credenciales para acceso a base de datos es efímera y conduce a la revocación del rol mediante la operación \texttt{DROP ROLE}; (2) la trazabilidad de accesos se materializa en eventos de auditoría en formato JSON generados por \gls{vault}; y (3) la configuración del entorno y de las políticas se puede reproducir a partir de manifiestos declarativos versionados con Terraform \parencite{vault_database_secrets_engine,vault_audit_devices,terraform_documentation}.
 
-Las fuentes de evidencia utilizadas incluyen la topología del laboratorio (Figura \ref{fig:topologia}), la automatización del host (Listado \ref{lst:setup}) y la lógica de aprovisionamiento declarativo (Listado \ref{lst:terraform-main}).
+Las fuentes de evidencia utilizadas incluyen la topología del laboratorio (Figura \ref{fig:topologia}), la automatización del host (Listado \ref{lst:setup}), la lógica de aprovisionamiento declarativo (Listado \ref{lst:terraform-main}) y la orquestación de configuración por Ansible (Listados \ref{lst:ansible-site} y \ref{lst:ansible-vault}). Como control de reproducibilidad del código de infraestructura, se incorpora además la validación sintáctica y semántica de manifiestos mediante \texttt{terraform validate}, junto con la separación explícita de parámetros sensibles de autenticación de la API de Proxmox respecto al código versionado.
+
+Como verificación operativa complementaria, se ejecutaron pruebas no destructivas por \texttt{SSH} sobre el host Proxmox del laboratorio para confirmar identidad de ejecución y estado base de plataforma (\texttt{hostname}, \texttt{id}, \texttt{pve-manager}). Este paso permite acotar el riesgo previo a cualquier \textit{apply}, al validar que el contexto remoto y los permisos de operador son los esperados antes de introducir cambios de estado.
 
 \section{Resultados}
 
+\subsection{Matriz de verificación operativa (evidencia directa)}
+Con el objetivo de aportar trazabilidad verificable para la defensa, la Tabla \ref{tab:verificacion-operativa} resume las comprobaciones ejecutadas sobre el entorno real de Proxmox y su estado observado en esta iteración.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{p{0.27\textwidth} p{0.33\textwidth} p{0.34\textwidth}}
+\toprule
+\textbf{Objetivo evaluado} & \textbf{Prueba ejecutada} & \textbf{Resultado observado} \\
+\midrule
+Existencia y arranque de nodos del laboratorio (501--504) &
+Inspección de estado con \texttt{pct list} y \texttt{qm list/status} en Proxmox &
+Nodos creados y en ejecución: \texttt{gitea-runner} (501), \texttt{vault-server} (502), \texttt{postgres-db} (503), \texttt{k3s-cluster} (504). \\
+\addlinespace
+Coherencia de topología y direccionamiento &
+Revisión de configuración con \texttt{pct config} y \texttt{qm config} &
+Direccionamiento aplicado en red de laboratorio (\texttt{192.168.1.0/24}) y mapeo funcional alineado con la Figura \ref{fig:topologia}. \\
+\addlinespace
+Accesibilidad de automatización sobre nodos de servicio &
+Validación de conectividad Ansible (\texttt{ansible -m ping}) desde el host Proxmox hacia 501--503 &
+Respuesta \texttt{pong} en los tres contenedores de servicio, confirmando canal de automatización operativo para la fase de configuración. \\
+\addlinespace
+Convergencia funcional de servicios de aplicación &
+Ejecución de playbooks Ansible por rol (Gitea, Vault y PostgreSQL) y comprobación con \texttt{systemctl is-active} + puertos en escucha &
+Servicios convergidos y activos: Gitea (\texttt{:3000}), Vault (\texttt{:8200}) y PostgreSQL (\texttt{:5432}) en sus nodos correspondientes. \\
+\addlinespace
+Estado operacional de la bóveda de secretos (\gls{vault}) &
+Inicialización y desellado controlado mediante \texttt{vault operator init/unseal} + comprobación de \texttt{/v1/sys/health} &
+\gls{vault} queda en estado \texttt{initialized=true}, \texttt{sealed=false}, modo \texttt{active}, con \textit{health check} HTTP 200 y almacenamiento \gls{raft} operativo. \\
+\addlinespace
+Estado operacional del clúster \gls{k3s} (VM 504) &
+Comprobación de red, \texttt{SSH}, \texttt{qemu-guest-agent}, servicio \texttt{k3s} y \texttt{kubectl get nodes -o wide} &
+Nodo \texttt{k3s-cluster} accesible y en estado \texttt{Ready}; servicios \texttt{ssh}, \texttt{qemu-guest-agent} y \texttt{k3s} activos en la VM de orquestación. \\
+\bottomrule
+\end{tabular}
+\caption{Matriz de verificación operativa del laboratorio: objetivo, prueba ejecutada y resultado observado.}
+\label{tab:verificacion-operativa}
+\end{table}
+
 \subsection{Emisión dinámica de credenciales (TTL) y revocación}
 Durante la ejecución del flujo propuesto, el runner obtiene credenciales de forma efímera a partir de \gls{vault}, asociadas a un \gls{ttl} configurado para limitar el periodo de exposición del secreto. La evidencia funcional se sustenta en que el aprovisionamiento de la lógica de emisión y revocación se define mediante manifiestos Terraform (Listado \ref{lst:terraform-main}) que conectan \gls{vault} con PostgreSQL y gobiernan el comportamiento de acceso. En consecuencia, al finalizar el trabajo (y/o expirar el periodo asociado al \gls{ttl}), el acceso se revoca mediante \texttt{DROP ROLE} en PostgreSQL, eliminando el rol efímero y reduciendo el impacto temporal de una posible exposición \parencite{vault_database_secrets_engine}.
+
+Como validación operativa directa en Proxmox, se ejecutó una prueba extremo a extremo sobre el motor dinámico de base de datos de \gls{vault} con una credencial efímera real:
+\begin{enumerate}
+    \item Se solicitó una credencial dinámica (\texttt{database/creds/readonly-role}) y se obtuvo un usuario temporal único con \textit{lease} asociado.
+    \item Con esa credencial se ejecutó una consulta satisfactoria en PostgreSQL (\texttt{pre\_revoke\_query=ok}).
+    \item Se revocó la \textit{lease} en modo síncrono (\texttt{revoke\_rc=0} y confirmación de revocación exitosa).
+    \item Tras la revocación, la misma credencial dejó de autenticar (\texttt{post\_revoke\_query=failed\_expected}) y el rol temporal ya no existía en \texttt{pg\_roles} (\texttt{post\_revoke\_role\_exists=no}).
+\end{enumerate}
+Este resultado confirma de forma empírica el comportamiento esperado de emisión efímera y revocación efectiva, alineado con la hipótesis de reducción de persistencia del riesgo por \gls{secretsprawl}.
 
 El entorno que soporta esta secuencia está descrito en la Figura \ref{fig:topologia}.
 
@@ -386,9 +497,39 @@ El entorno que soporta esta secuencia está descrito en la Figura \ref{fig:topol
 La segunda dimensión evaluada es la trazabilidad. El motor de auditoría de \gls{vault} registra cada interacción en formato JSON con campos consistentes (identidad solicitante, política evaluada, ruta del secreto y timestamp). Esta evidencia se alinea con la arquitectura del laboratorio descrita en la Figura \ref{fig:topologia} y facilita la correlación de eventos hacia un sistema de monitorización tipo \gls{siem}, habilitando la detección de anomalías asociadas a intentos fallidos o patrones de acceso no esperados \parencite{vault_audit_devices,nist_sp800_207}.
 
 \subsection{Reproducibilidad del despliegue mediante IaC}
-La reproducibilidad del despliegue se valida verificando que el laboratorio on-premise se construye desde código versionado y declarativo. El aprovisionamiento del host se automatiza mediante el script del Listado \ref{lst:setup}, mientras que la configuración de políticas, motores y roles se define a través de manifiestos Terraform (Listado \ref{lst:terraform-main}). Este enfoque reduce la deriva operativa entre ejecuciones y refuerza la hipótesis de una implementación inmutable y auditable en el \gls{sdlc} \parencite{terraform_documentation}.
+La reproducibilidad del despliegue se valida verificando que el laboratorio on-premise se construye desde código versionado y declarativo. El aprovisionamiento del host se automatiza mediante el script del Listado \ref{lst:setup}, mientras que la configuración de políticas, motores y roles se define a través de manifiestos Terraform (Listado \ref{lst:terraform-main}). Sobre esta base, la configuración específica de cada nodo (Gitea Runner, Vault, PostgreSQL y K3s) se orquesta mediante playbooks Ansible idempotentes (Listados \ref{lst:ansible-site} y \ref{lst:ansible-vault}), separados por rol técnico y reutilizables en nuevas iteraciones del laboratorio. Este enfoque reduce la deriva operativa entre ejecuciones y refuerza la hipótesis de una implementación inmutable y auditable en el \gls{sdlc} \parencite{terraform_documentation}.
+
+En la validación experimental de esta iteración se observó:
+\begin{enumerate}
+    \item \texttt{terraform validate} finaliza con éxito tras ajustar la validación de entrada de clave pública.
+    \item El aprovisionamiento controlado en Proxmox genera y arranca los nodos reservados del laboratorio (IDs 501--504) con la asignación funcional esperada (Gitea Runner, Vault, PostgreSQL y K3s).
+    \item La conectividad de automatización con Ansible es correcta cuando se ejecuta desde el propio host Proxmox hacia los nodos internos (respuesta \texttt{pong} en contenedores y acceso \texttt{SSH} operativo en la VM \gls{k3s}).
+    \item La convergencia de servicios queda validada con evidencias de ejecución (\texttt{systemctl is-active}, versiones de binario y puertos en escucha) en Gitea, Vault y PostgreSQL, incluyendo inicialización y desellado operativo de Vault con respuesta de salud HTTP 200.
+    \item El clúster \gls{k3s} queda funcional en la VM 504, con nodo \texttt{Ready} validado mediante \texttt{kubectl get nodes -o wide}.
+\end{enumerate}
+
+\subsection{Pruebas complementarias con métricas y casos negativos}
+Para reforzar la validez experimental, se ejecutó una batería adicional automatizada sobre Proxmox (artefacto: \texttt{artifacts/validation/proxmox\_validation\_results.txt}) con resultados cuantitativos y de control de acceso:
+\begin{itemize}
+    \item \textbf{Tiempo de emisión de credencial dinámica:} \texttt{issue\_ms=107} ms.
+    \item \textbf{Tiempo de revocación síncrona:} \texttt{revoke\_ms=103} ms.
+    \item \textbf{TTL efectivo de lease:} \texttt{lease\_ttl\_seconds=60}.
+    \item \textbf{Prueba positiva de uso:} credencial recién emitida válida en PostgreSQL (\texttt{pre\_revoke\_query=ok}).
+    \item \textbf{Prueba negativa de revocación:} tras revocar, la credencial deja de operar (\texttt{post\_revoke\_query=failed\_expected}) y el rol efímero se elimina del catálogo (\texttt{post\_revoke\_role\_exists=no}).
+    \item \textbf{Prueba negativa de autorización:} un token sin política de lectura a \texttt{database/creds/readonly-role} recibe denegación (\texttt{unauthorized\_token\_access=denied\_expected}).
+\end{itemize}
+Estos resultados incrementan el nivel de evidencia más allá de la validación funcional cualitativa, al demostrar comportamiento temporal y de control de acceso con medidas observables en ejecución real.
 
 \section{Discusión}
+
+Para sintetizar la relación entre marco regulatorio, controles técnicos y evidencia experimental del trabajo, la Figura \ref{fig:matriz-trazabilidad} presenta la matriz de trazabilidad del TFM.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{diagrams/matriz_trazabilidad.png}
+    \caption{Matriz de trazabilidad entre requisitos normativos (NIST SP 800-207, NIS2 y DORA), controles implementados en la arquitectura y evidencias documentadas en el TFM.}
+    \label{fig:matriz-trazabilidad}
+\end{figure}
 
 \subsection{Confirmación de hipótesis y relación con el Secret Sprawl}
 Los resultados observados en el laboratorio respaldan la hipótesis principal: la sustitución de credenciales estáticas por emisión dinámica reduce el tiempo durante el cual una credencial podría reutilizarse tras una potencial exposición, mitigando \gls{secretsprawl}. Además, la trazabilidad habilitada en \gls{vault} y la arquitectura orientada a prevención son coherentes con buenas prácticas de secret management y secret scanning \parencite{owasp_secrets_management_cheat_sheet,github_secret_scanning,vault_audit_devices}.

@@ -1,0 +1,101 @@
+---
+- name: Configure LXC Gitea runner node
+  hosts: gitea_runner
+  become: true
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install base packages
+      ansible.builtin.apt:
+        name: "{{ common_packages + ['git', 'jq'] }}"
+        state: present
+
+    - name: Ensure gitea service account exists
+      ansible.builtin.user:
+        name: gitea
+        shell: /bin/bash
+        create_home: true
+        state: present
+
+    - name: Create Gitea required directories
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        owner: "{{ item.owner }}"
+        group: "{{ item.group }}"
+        mode: "{{ item.mode }}"
+      loop:
+        - { path: /var/lib/gitea, owner: gitea, group: gitea, mode: "0750" }
+        - { path: /var/lib/gitea/custom, owner: gitea, group: gitea, mode: "0750" }
+        - { path: /var/lib/gitea/data, owner: gitea, group: gitea, mode: "0750" }
+        - { path: /var/lib/gitea/log, owner: gitea, group: gitea, mode: "0750" }
+        - { path: /etc/gitea, owner: gitea, group: gitea, mode: "0770" }
+
+    - name: Install Gitea binary
+      ansible.builtin.shell: |
+        set -euo pipefail
+        curl -fsSL "https://dl.gitea.com/gitea/1.22.6/gitea-1.22.6-linux-amd64" -o /usr/local/bin/gitea
+        chmod 0755 /usr/local/bin/gitea
+      args:
+        creates: /usr/local/bin/gitea
+
+    - name: Create basic Gitea app configuration
+      ansible.builtin.copy:
+        dest: /etc/gitea/app.ini
+        owner: gitea
+        group: gitea
+        mode: "0660"
+        content: |
+          APP_NAME = TFM Gitea
+          RUN_USER = gitea
+          RUN_MODE = prod
+          [server]
+          DOMAIN = 192.168.1.211
+          HTTP_PORT = 3000
+          ROOT_URL = http://192.168.1.211:3000/
+          [database]
+          DB_TYPE = sqlite3
+          PATH = /var/lib/gitea/data/gitea.db
+          [security]
+          INSTALL_LOCK = true
+          SECRET_KEY = tfm-lab-secret-key
+
+    - name: Install Gitea systemd unit
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/gitea.service
+        mode: "0644"
+        content: |
+          [Unit]
+          Description=Gitea (Git with a cup of tea)
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=gitea
+          Group=gitea
+          WorkingDirectory=/var/lib/gitea/
+          ExecStart=/usr/local/bin/gitea web --config /etc/gitea/app.ini
+          Restart=always
+          Environment=USER=gitea HOME=/home/gitea GITEA_WORK_DIR=/var/lib/gitea
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Ensure Gitea service is running
+      ansible.builtin.systemd:
+        name: gitea
+        enabled: true
+        state: started
+
+    - name: Create marker for runner node
+      ansible.builtin.copy:
+        dest: /etc/tfm-node-role
+        content: "gitea-runner\n"
+        mode: "0644"

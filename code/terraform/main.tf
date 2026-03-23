@@ -4,12 +4,23 @@ terraform {
       source  = "bpg/proxmox"
       version = "~> 0.46.1"
     }
+    vault = {
+      source  = "hashicorp/vault"
+      version = "~> 4.5"
+    }
   }
 }
 
 provider "proxmox" {
   endpoint = var.proxmox_endpoint
+  username = var.proxmox_username
+  password = var.proxmox_password
   insecure = var.proxmox_insecure # Solo para entornos de laboratorio locales sin CA interna
+}
+
+provider "vault" {
+  address = var.vault_address
+  token   = var.vault_token
 }
 
 # ==========================================

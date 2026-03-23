@@ -1,0 +1,34 @@
+---
+- name: Configure VM K3s node
+  hosts: k3s_servers
+  become: true
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install base packages
+      ansible.builtin.apt:
+        name: "{{ common_packages + ['curl', 'bash'] }}"
+        state: present
+
+    - name: Install K3s server if missing
+      ansible.builtin.shell: |
+        set -euo pipefail
+        curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL={{ k3s_install_channel }} sh -
+      args:
+        executable: /bin/bash
+        creates: /usr/local/bin/k3s
+
+    - name: Ensure k3s service is running
+      ansible.builtin.systemd:
+        name: k3s
+        enabled: true
+        state: started
+
+    - name: Create marker for k3s node
+      ansible.builtin.copy:
+        dest: /etc/tfm-node-role
+        content: "k3s-cluster\n"
+        mode: "0644"

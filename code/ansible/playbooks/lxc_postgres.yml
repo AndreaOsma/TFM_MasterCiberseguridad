@@ -1,0 +1,29 @@
+---
+- name: Configure LXC PostgreSQL node
+  hosts: postgres_servers
+  become: true
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install PostgreSQL server
+      ansible.builtin.apt:
+        name:
+          - postgresql
+          - postgresql-client
+          - python3-psycopg2
+        state: present
+
+    - name: Ensure PostgreSQL is running
+      ansible.builtin.systemd:
+        name: postgresql
+        enabled: true
+        state: started
+
+    - name: Create marker for postgres node
+      ansible.builtin.copy:
+        dest: /etc/tfm-node-role
+        content: "postgres-db\n"
+        mode: "0644"

@@ -1,0 +1,5 @@
+---
+- import_playbook: lxc_gitea.yml
+- import_playbook: lxc_vault.yml
+- import_playbook: lxc_postgres.yml
+- import_playbook: vm_k3s.yml
