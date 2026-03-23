@@ -1,7 +1,7 @@
 variable "proxmox_endpoint" {
   type        = string
-  description = "URL de la API de Proxmox"
-  default     = "https://10.0.0.10:8006/"
+  description = "URL de la API de Proxmox (hostname resuelto por DNS de Tailscale en este laboratorio)."
+  default     = "https://proxmox:8006/"
 }
 
 variable "proxmox_insecure" {
@@ -87,7 +87,7 @@ variable "enable_vault_bootstrap" {
 
 variable "vault_address" {
   type        = string
-  description = "URL de Vault (ej: http://10.0.0.20:8200)."
+  description = "URL de Vault (ej: http://192.168.1.220:8200)."
   default     = "http://192.168.1.220:8200"
 }
 

@@ -327,9 +327,9 @@ La topología de red y computación se segmenta utilizando una combinación de c
 
 \begin{itemize}
     \item \textbf{\gls{lxc} 1 (Gitea v1.21 + Act Runner):} Plataforma ligera para el control de versiones y la ejecución de pipelines de CI/CD, configurada para emitir tokens \gls{oidc}.
-    \item \textbf{\gls{lxc} 2 (HashiCorp \gls{vault} v1.15):} Bóveda criptográfica central con motor de almacenamiento integrado (\gls{raft}) en configuración de nodo único.
-    \item \textbf{\gls{lxc} 3 (PostgreSQL v16):} Motor de base de datos relacional que actúa como sistema objetivo para la inyección dinámica de credenciales.
-    \item \textbf{VM 1 (\gls{k3s} v1.28):} Clúster de \gls{kubernetes} ligero sobre una distribución Debian minimalista. El uso de una máquina virtual proporciona aislamiento a nivel de kernel, lo cual mitiga vectores de escape de contenedores \parencite{kubernetes_overview,k3s_documentation}.
+    \item \textbf{\gls{lxc} 2 (HashiCorp \gls{vault} v1.17.5):} Bóveda criptográfica central con motor de almacenamiento integrado (\gls{raft}) en configuración de nodo único.
+    \item \textbf{\gls{lxc} 3 (PostgreSQL v17):} Motor de base de datos relacional que actúa como sistema objetivo para la inyección dinámica de credenciales.
+    \item \textbf{VM 1 (\gls{k3s}, canal \textit{stable}; validado en v1.34.5+k3s1):} Clúster de \gls{kubernetes} ligero sobre una distribución Debian minimalista. El uso de una máquina virtual proporciona aislamiento a nivel de kernel, lo cual mitiga vectores de escape de contenedores \parencite{kubernetes_overview,k3s_documentation}.
 \end{itemize}
 
 \begin{figure}[htbp]
