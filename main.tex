@@ -11,6 +11,8 @@
 \usepackage{booktabs}
 \usepackage{xcolor}
 \usepackage[automake=delayed]{glossaries}
+\usepackage[backend=biber,style=apa]{biblatex}
+\usepackage{csquotes}
 
 \onehalfspacing
 
@@ -27,6 +29,8 @@
 }
 
 \makeglossaries
+
+\addbibresource{references.bib}
 
 % Dejar que el título del glosario lo gestione manualmente el documento (TOC numerado).
 \setglossarysection{none}
@@ -364,7 +368,6 @@ En conclusión, desplazar la seguridad hacia las fases iniciales del desarrollo 
 \nocite{*}
 \newpage
 \section{Bibliografía}
-\bibliographystyle{splncs04} 
-\bibliography{references} 
+\printbibliography
 
 \end{document}
