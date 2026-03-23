@@ -10,7 +10,7 @@
 \usepackage{geometry}
 \usepackage{booktabs}
 \usepackage{xcolor}
-\usepackage[automake=delayed,toc]{glossaries}
+\usepackage[automake=delayed]{glossaries}
 
 \onehalfspacing
 
@@ -28,8 +28,8 @@
 
 \makeglossaries
 
-% Añadir el título del glosario al índice sin duplicar el encabezado.
-\setglossarysection{section}
+% Dejar que el título del glosario lo gestione manualmente el documento (TOC numerado).
+\setglossarysection{none}
 
 \newglossaryentry{oidc}{
     name={OIDC},
@@ -357,8 +357,9 @@ La integración de una bóveda criptográfica centralizada, combinada con la fed
 
 En conclusión, desplazar la seguridad hacia las fases iniciales del desarrollo (\textit{shift-left}) y basar el acceso en validaciones dinámicas de identidad transforma la postura defensiva de la organización, mitigando de forma medible la problemática del \textit{Secret Sprawl} y preparando la infraestructura para futuras adopciones de nubes híbridas.
 
+\section{Glosario}
 \glsaddall
-\printglossaries[title={Glosario},toctitle={Glosario}]
+\printglossaries
 
 \nocite{*}
 \newpage
