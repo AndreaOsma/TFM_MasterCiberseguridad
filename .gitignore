@@ -33,5 +33,7 @@ code/terraform/.terraform.lock.hcl
 *.gls
 *.glg
 *.ist
+*.xml
+*.bcf
 *.synctex.gz
 texput.log
