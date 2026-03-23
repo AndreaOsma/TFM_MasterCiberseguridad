@@ -208,9 +208,9 @@ TFM del Máster de Ciberseguridad de la ENIIT sobre la problemática del Secret 
 La evolución de la infraestructura IT, desde los centros de datos locales hacia la computación en la nube y las arquitecturas de microservicios, ha forzado una reevaluación total de los modelos de confianza. El modelo de seguridad perimetral, basado en la premisa de una red interna segura protegida por firewalls (Castillo y Foso), ha demostrado ser ineficaz en entornos donde las cargas de trabajo son efímeras y se distribuyen en múltiples nubes.
 
 \subsubsection{El Paradigma Zero Trust y el Cumplimiento Normativo}
-Según la publicación especial NIST SP 800-207, la Arquitectura Zero Trust (ZTA) es un modelo de ciberseguridad que asume que no existe confianza implícita concedida a los activos o cuentas de usuario basándose únicamente en su ubicación física o de red. En lugar de defender un perímetro estático, la autenticación y autorización se evalúan de forma dinámica y continua por cada solicitud de acceso, protegiendo los recursos de manera individualizada.
+Según la publicación especial NIST SP 800-207, la Arquitectura Zero Trust (ZTA) es un modelo de ciberseguridad que asume que no existe confianza implícita concedida a los activos o cuentas de usuario basándose únicamente en su ubicación física o de red. En lugar de defender un perímetro estático, la autenticación y autorización se evalúan de forma dinámica y continua por cada solicitud de acceso, protegiendo los recursos de manera individualizada \parencite{nist_sp800_207}.
 
-A nivel regulatorio, este cambio de paradigma se ha materializado en marcos europeos recientes como la directiva NIS2 y DORA (Digital Operational Resilience Act). Estas normativas exigen a las organizaciones, especialmente en infraestructuras críticas y el sector financiero, implementar controles estrictos y demostrables sobre la gestión de identidades, la resiliencia operativa y el riesgo de la cadena de suministro. La rotación automatizada de credenciales y la auditoría continua pasan de ser buenas prácticas a ser obligaciones legales estrictas.
+A nivel regulatorio, este cambio de paradigma se ha materializado en marcos europeos recientes como la directiva NIS2 y DORA (Digital Operational Resilience Act). Estas normativas exigen a las organizaciones, especialmente en infraestructuras críticas y el sector financiero, implementar controles estrictos y demostrables sobre la gestión de identidades, la resiliencia operativa y el riesgo de la cadena de suministro. La rotación automatizada de credenciales y la auditoría continua pasan de ser buenas prácticas a ser obligaciones legales estrictas \parencite{nis2_2022_2555,dora_2022_2554}.
 
 En el paradigma actual, la red es dinámica y, por definición, hostil. Por tanto, la seguridad debe desplazarse desde la red hacia la identidad. Este cambio sitúa a la Gestión de Identidad y Acceso (IAM) no como un servicio de soporte, sino como el plano de control central de la seguridad de la información. Este TFM analiza soluciones diseñadas para mitigar los riesgos derivados de la proliferación de identidades no humanas.
 
@@ -231,7 +231,7 @@ El término secret sprawl define la distribución descontrolada de credenciales 
 
 Investigaciones recientes sugieren que las identidades de máquinas (servicios, contenedores, bots) crecen a un ritmo cinco veces superior al de las identidades humanas. A diferencia de un operador humano, que puede validar su identidad aportando biometría o un token de hardware en un flujo \gls{mfa} tradicional, una carga de trabajo automatizada carece de este factor interactivo ("algo que eres" o "algo que tienes").
 
-Esto exige sustituir el \gls{mfa} humano por la validación concurrente de múltiples atributos criptográficos y contextuales. Se requiere la presentación de credenciales como certificados \gls{tls} mutuos (\gls{mtls}) o tokens JWT firmados, combinados con la verificación de la IP de origen, el namespace o la rama del repositorio en tiempo de ejecución. Se espera que la validación estricta de estos metadatos limite la emisión de secretos exclusivamente a las cargas de trabajo legítimas.
+Esto exige sustituir el \gls{mfa} humano por la validación concurrente de múltiples atributos criptográficos y contextuales. Se requiere la presentación de credenciales como certificados \gls{tls} mutuos (\gls{mtls}) o tokens JWT firmados, combinados con la verificación de la IP de origen, el namespace o la rama del repositorio en tiempo de ejecución. Se espera que la validación estricta de estos metadatos limite la emisión de secretos exclusivamente a las cargas de trabajo legítimas \parencite{rfc7519_jwt}.
 
 \subsubsection{Riesgos de Seguridad Derivados del Secret Sprawl}
 El almacenamiento incontrolado y la exposición de credenciales generan vectores de ataque críticos en las infraestructuras modernas. La literatura académica señala que la exposición de secretos en pipelines de CI/CD y en repositorios de código facilita la ejecución de los siguientes escenarios de compromiso:
@@ -259,14 +259,14 @@ Para mitigar los riesgos asociados a la dispersión de credenciales, la gestión
 La gestión de identidades y secretos interactúa a lo largo de todo el Ciclo de Vida del Desarrollo de Software (SDLC). Aplicar el principio de shift-left security exige implementar controles técnicos desde las fases más tempranas:
 
 \begin{itemize}
-    \item \textbf{Fase de Código (Code and Commit):} Constituye la primera línea de defensa. Dado que es habitual que se introduzcan credenciales hardcodeadas de manera inadvertida, en esta etapa se despliegan escaneos de secretos y hooks de pre-commit en los repositorios locales para bloquear la inyección en el control de versiones.
+    \item \textbf{Fase de Código (Code and Commit):} Constituye la primera línea de defensa. Dado que es habitual que se introduzcan credenciales hardcodeadas de manera inadvertida, en esta etapa se despliegan escaneos de secretos y hooks de pre-commit en los repositorios locales para bloquear la inyección en el control de versiones \parencite{owasp_secrets_management_cheat_sheet,github_secret_scanning}.
     \item \textbf{Fase de Construcción (Build and CI):} Los servidores de Integración Continua requieren acceso a repositorios de artefactos y entornos de prueba. El uso de variables de entorno estáticas en esta fase representa un riesgo significativo de fuga de datos. Los secretos deben ser inyectados dinámicamente y enmascarados para evitar su volcado accidental en los registros (logs) de ejecución.
     \item \textbf{Fase de Pruebas (Test):} Las herramientas de análisis dinámico e interactivo (\gls{dast} e \gls{iast}) necesitan credenciales temporales para ejecutar sus escaneos en los entornos de validación. Esta fase garantiza la separación estricta entre las credenciales de prueba y las de producción.
     \item \textbf{Fase de Despliegue y Operación (Deploy and Run):} En la etapa final, las cargas de trabajo contenerizadas u orquestadas solicitan sus credenciales en tiempo de ejecución. El gestor central valida la identidad criptográfica de la carga de trabajo y entrega un acceso efímero vinculado a políticas contextuales.
 \end{itemize}
 
 \subsection{Trazabilidad Forense y Dispositivos de Auditoría}
-Un pilar fundamental de la Arquitectura Zero Trust es la visibilidad total sobre las peticiones de acceso. Durante las pruebas, se habilitó el motor de auditoría de \gls{vault} para registrar cada interacción en formato JSON. Este registro inmutable captura el identificador de la entidad solicitante, la política evaluada, la ruta del secreto y la marca de tiempo exacta.
+Un pilar fundamental de la Arquitectura Zero Trust es la visibilidad total sobre las peticiones de acceso. Durante las pruebas, se habilitó el motor de auditoría de \gls{vault} para registrar cada interacción en formato JSON. Este registro inmutable captura el identificador de la entidad solicitante, la política evaluada, la ruta del secreto y la marca de tiempo exacta \parencite{vault_audit_devices}.
 
 La exportación de estos registros estructurados hacia un sistema SIEM centralizado permite la detección de anomalías en tiempo real, como múltiples intentos de acceso denegados desde una IP específica, garantizando así los requisitos de resiliencia y auditoría continua exigidos por marcos normativos actuales.
 
@@ -297,7 +297,7 @@ La propuesta central de este proyecto consiste en el diseño e implementación d
 El núcleo del sistema reside en una bóveda criptográfica de alta disponibilidad (como HashiCorp \gls{vault}), configurada para operar como la única fuente de verdad para el material sensible. La arquitectura se segmenta en tres planos funcionales:
 
 \begin{itemize}
-    \item \textbf{Plano de Autenticación:} Las cargas de trabajo (contenedores, pipelines de despliegue) no poseen secretos iniciales estáticos en disco. Se autentican contra la bóveda utilizando identidades nativas de su entorno de ejecución, tales como tokens JWT en entornos de CI/CD mediante \gls{oidc} (OpenID Connect) o Service Accounts en orquestadores.
+    \item \textbf{Plano de Autenticación:} Las cargas de trabajo (contenedores, pipelines de despliegue) no poseen secretos iniciales estáticos en disco. Se autentican contra la bóveda utilizando identidades nativas de su entorno de ejecución, tales como tokens JWT en entornos de CI/CD mediante \gls{oidc} (OpenID Connect) o Service Accounts en orquestadores \parencite{rfc7519_jwt,oidc_core_1_0}.
     \item \textbf{Plano de Autorización:} Una vez autenticada la entidad no humana, un motor de políticas (\gls{policyascode}) evalúa de forma estricta si la identidad posee los privilegios mínimos necesarios para acceder a la ruta del secreto solicitado.
     \item \textbf{Plano de Emisión Dinámica:} En lugar de devolver una credencial de larga duración, el sistema genera credenciales efímeras bajo demanda (por ejemplo, usuarios temporales de bases de datos o certificados de corta duración) con un Tiempo de Vida (TTL) ajustado al tiempo de ejecución de la tarea.
 \end{itemize}
@@ -305,12 +305,12 @@ El núcleo del sistema reside en una bóveda criptográfica de alta disponibilid
 \subsection{Resolución del Problema del "Secreto Cero" (Secret Zero)}
 El desafío técnico más complejo en la automatización de secretos es el método para entregar el primer vector de autenticación a una máquina sin incurrir en prácticas de hardcoding. La solución propuesta aborda este dilema delegando la raíz de confianza en el proveedor de infraestructura subyacente. 
 
-Al emplear federación de identidades (\gls{oidc}) para los flujos de integración continua, el pipeline presenta a la bóveda un token criptográfico firmado temporalmente por el proveedor de CI/CD. La bóveda verifica la firma pública de este token frente a las claves públicas del proveedor. En consecuencia, el código fuente y los manifiestos de despliegue permanecen completamente limpios de material criptográfico persistente. Se espera que este diseño acote significativamente la superficie de exposición en los repositorios de código, si bien la integridad total depende de la robustez del proveedor de identidades externo, constituyendo un comportamiento esperado de mitigación, no una protección absoluta ante vulnerabilidades de terceros.
+Al emplear federación de identidades (\gls{oidc}) para los flujos de integración continua, el pipeline presenta a la bóveda un token criptográfico firmado temporalmente por el proveedor de CI/CD. La bóveda verifica la firma pública de este token frente a las claves públicas del proveedor. En consecuencia, el código fuente y los manifiestos de despliegue permanecen completamente limpios de material criptográfico persistente. Se espera que este diseño acote significativamente la superficie de exposición en los repositorios de código, si bien la integridad total depende de la robustez del proveedor de identidades externo, constituyendo un comportamiento esperado de mitigación, no una protección absoluta ante vulnerabilidades de terceros \parencite{oidc_core_1_0}.
 
 \subsection{Despliegue Inmutable y Operativa de Ingeniería}
 La abstracción de toda la infraestructura y configuración de seguridad se define mediante manifiestos declarativos. La inicialización de la bóveda, la definición de roles y la asignación de políticas de acceso se gestionan como código, permitiendo un versionado estricto y un control de cambios mediante flujos de revisión. 
 
-Fomentando una operativa técnica de alto rendimiento y reduciendo la fricción en la automatización, la interacción con el sistema en fases de administración e ingeniería se realiza exclusivamente mediante herramientas de interfaz de línea de comandos (\gls{cli}) y editores de terminal. Se descarta la dependencia de interfaces gráficas (GUI), lo que facilita la creación de scripts de automatización y establece un registro de comandos auditable para cada modificación en el estado de la seguridad. Es por este motivo que la arquitectura propuesta se despliega mediante Terraform.
+Fomentando una operativa técnica de alto rendimiento y reduciendo la fricción en la automatización, la interacción con el sistema en fases de administración e ingeniería se realiza exclusivamente mediante herramientas de interfaz de línea de comandos (\gls{cli}) y editores de terminal. Se descarta la dependencia de interfaces gráficas (GUI), lo que facilita la creación de scripts de automatización y establece un registro de comandos auditable para cada modificación en el estado de la seguridad. Es por este motivo que la arquitectura propuesta se despliega mediante Terraform \parencite{terraform_documentation}.
 
 \section{Demostración}
 
@@ -323,7 +323,7 @@ La topología de red y computación se segmenta utilizando una combinación de c
     \item \textbf{\gls{lxc} 1 (Gitea v1.21 + Act Runner):} Plataforma ligera para el control de versiones y la ejecución de pipelines de CI/CD, configurada para emitir tokens \gls{oidc}.
     \item \textbf{\gls{lxc} 2 (HashiCorp \gls{vault} v1.15):} Bóveda criptográfica central con motor de almacenamiento integrado (\gls{raft}) en configuración de nodo único.
     \item \textbf{\gls{lxc} 3 (PostgreSQL v16):} Motor de base de datos relacional que actúa como sistema objetivo para la inyección dinámica de credenciales.
-    \item \textbf{VM 1 (\gls{k3s} v1.28):} Clúster de \gls{kubernetes} ligero sobre una distribución Debian minimalista. El uso de una máquina virtual proporciona aislamiento a nivel de kernel, lo cual mitiga vectores de escape de contenedores.
+    \item \textbf{VM 1 (\gls{k3s} v1.28):} Clúster de \gls{kubernetes} ligero sobre una distribución Debian minimalista. El uso de una máquina virtual proporciona aislamiento a nivel de kernel, lo cual mitiga vectores de escape de contenedores \parencite{kubernetes_overview,k3s_documentation}.
 \end{itemize}
 
 \begin{figure}[htbp]
@@ -333,12 +333,12 @@ La topología de red y computación se segmenta utilizando una combinación de c
     \label{fig:topologia}
 \end{figure}
 
-Fomentando una operativa técnica ágil, la administración del entorno y la configuración de políticas en \gls{vault} se realiza de forma exclusiva mediante su \gls{cli} y la edición de manifiestos con \texttt{vi}. Esto permite una integración natural con repositorios de Infraestructura como Código (Terraform) y mantiene un registro de auditoría estricto, prescindiendo totalmente de interfaces gráficas.
+Fomentando una operativa técnica ágil, la administración del entorno y la configuración de políticas en \gls{vault} se realiza de forma exclusiva mediante su \gls{cli} y la edición de manifiestos con \texttt{vi}. Esto permite una integración natural con repositorios de Infraestructura como Código (Terraform) y mantiene un registro de auditoría estricto, prescindiendo totalmente de interfaces gráficas \parencite{vault_audit_devices,terraform_documentation}.
 
 \subsection{Estrategia de Despliegue mediante IaC}
-La orquestación de la seguridad y el control de accesos se define íntegramente a través de archivos de configuración declarativos (HCL) utilizando Terraform. Desde la terminal, mediante la edición de estos manifiestos, se establece la configuración del proveedor de HashiCorp \gls{vault}, la creación de políticas estructuradas (\gls{policyascode}) y la habilitación de los motores de secretos.
+La orquestación de la seguridad y el control de accesos se define íntegramente a través de archivos de configuración declarativos (HCL) utilizando Terraform. Desde la terminal, mediante la edición de estos manifiestos, se establece la configuración del proveedor de HashiCorp \gls{vault}, la creación de políticas estructuradas (\gls{policyascode}) y la habilitación de los motores de secretos \parencite{terraform_documentation}.
 
-Esta estrategia permite versionar la infraestructura de seguridad directamente en el repositorio de Gitea. Al aplicar los cambios de estado de forma determinista, se garantiza la inmutabilidad del entorno y se elimina la configuración manual.  Al prescindir de interfaces gráficas y operar exclusivamente mediante \gls{cli}, cualquier modificación en los roles o en los tiempos de vida (TTL) de los secretos queda registrada en el control de versiones, habilitando un proceso de revisión por pares (Pull Requests) antes de su aplicación en producción.
+Esta estrategia permite versionar la infraestructura de seguridad directamente en el repositorio de Gitea. Al aplicar los cambios de estado de forma determinista, se garantiza la inmutabilidad del entorno y se elimina la configuración manual.  Al prescindir de interfaces gráficas y operar exclusivamente mediante \gls{cli}, cualquier modificación en los roles o en los tiempos de vida (TTL) de los secretos queda registrada en el control de versiones, habilitando un proceso de revisión por pares (Pull Requests) antes de su aplicación en producción \parencite{terraform_documentation}.
 
 \subsubsection{Instalación de dependencias en Proxmox}
 Para garantizar la reproducibilidad del entorno de laboratorio en el hipervisor Proxmox, la fase inicial del despliegue requiere la preparación del host. Este proceso se ha automatizado mediante un script de inicialización (\textit{shell script}) que estandariza las dependencias operativas antes de la ejecución de cualquier manifiesto declarativo.
@@ -364,13 +364,35 @@ El punto crítico para mantener la automatización ininterrumpida es la directiv
 \lstinputlisting[language=bash, caption={Aprovisionamiento de infraestructura lógica mediante Terraform}, label={lst:terraform-main}]{code/terraform/main.tf}
 
 \subsection*{Generación Dinámica de Credenciales en PostgreSQL}
-Tras la autenticación exitosa del pipeline de CI/CD mediante \gls{oidc}, la carga de trabajo requiere acceso al motor de base de datos relacional ubicado en el \gls{lxc} 3. En lugar de inyectar una cadena de conexión estática, el runner realiza una petición a la API de \gls{vault}, configurado previamente con el motor de base de datos (Database Secrets Engine), interactúa de forma nativa con PostgreSQL para crear un rol de usuario efímero con permisos limitados (ej. \texttt{SELECT} sobre tablas específicas). Esta credencial se devuelve al runner en memoria. Una vez finalizado el TTL estipulado, o al concluir la ejecución del trabajo, \gls{vault} ejecuta automáticamente una sentencia \texttt{DROP ROLE} en la base de datos, revocando el acceso y eliminando cualquier rastro de la credencial.
+Tras la autenticación exitosa del pipeline de CI/CD mediante \gls{oidc}, la carga de trabajo requiere acceso al motor de base de datos relacional ubicado en el \gls{lxc} 3. En lugar de inyectar una cadena de conexión estática, el runner realiza una petición a la API de \gls{vault}, configurado previamente con el motor de base de datos (Database Secrets Engine), interactúa de forma nativa con PostgreSQL para crear un rol de usuario efímero con permisos limitados (ej. \texttt{SELECT} sobre tablas específicas). Esta credencial se devuelve al runner en memoria. Una vez finalizado el TTL estipulado, o al concluir la ejecución del trabajo, \gls{vault} ejecuta automáticamente una sentencia \texttt{DROP ROLE} en la base de datos, revocando el acceso y eliminando cualquier rastro de la credencial \parencite{vault_database_secrets_engine}.
 
-En la configuración de Terraform se detalla la lógica declarativa para aprovisionar el motor de secretos de base de datos en \gls{vault}. Este manifiesto establece la conexión con la instancia de PostgreSQL alojada en el \gls{lxc} 3 y define las sentencias SQL parametrizadas que el sistema ejecutará en tiempo real para generar credenciales de solo lectura.
+En la configuración de Terraform se detalla la lógica declarativa para aprovisionar el motor de secretos de base de datos en \gls{vault}. Este manifiesto establece la conexión con la instancia de PostgreSQL alojada en el \gls{lxc} 3 y define las sentencias SQL parametrizadas que el sistema ejecutará en tiempo real para generar credenciales de solo lectura \parencite{terraform_documentation,vault_database_secrets_engine}.
 
 % \lstinputlisting[language=bash, caption={Aprovisionamiento de motor de base de datos dinámico en Vault mediante Terraform (HCL)}, label={lst:terraform-postgres}]{code/terraform/postgres.tf}
 
 Al aplicar este manifiesto, la lógica de creación de usuarios queda versionada e inmutable. El comportamiento esperado es que, ante cualquier intento de acceso lateral, la caducidad inherente del usuario (300 segundos) mitigue de forma severa la ventana de exposición del dato.
+
+\section{Resultados}
+
+\subsection{Emisión dinámica de credenciales (TTL) y revocación}
+Durante la ejecución del flujo propuesto, la credencial se obtiene de forma efímera a partir de Vault, asociada a un Tiempo de Vida (TTL) configurado para limitar el periodo de exposición del secreto. La lógica de integración fuerza que, una vez concluido el TTL o el trabajo de CI/CD finalizado, el acceso sea revocado mediante la sentencia \texttt{DROP ROLE} en PostgreSQL, eliminando la credencial y reduciendo la superficie temporal susceptible de abuso.
+
+\subsection{Trazabilidad de auditoría y detección}
+La habilitación del motor de auditoría de Vault permite registrar cada interacción en formato JSON, conservando información relevante para la trazabilidad: entidad solicitante, política evaluada, ruta del secreto y marca temporal. Esta granularidad facilita la exportación y correlación de eventos hacia un sistema de monitorización (p. ej., SIEM), habilitando la detección de anomalías asociadas a intentos fallidos o patrones de acceso no esperados.
+
+\subsection{Reproducibilidad del despliegue mediante IaC}
+El despliegue del laboratorio on-premise se automatiza mediante Terraform a partir de manifiestos declarativos (HCL). El versionado del estado de la infraestructura, junto con el control de cambios a través de revisiones (Pull Requests), aporta repetibilidad al entorno y reduce la deriva operativa entre ejecuciones. Este resultado refuerza la hipótesis de que la gestión de seguridad puede codificarse e implementarse de forma consistente en fases tempranas del SDLC.
+
+\section{Discusión}
+
+\subsection{Confirmación de hipótesis y relación con el Secret Sprawl}
+Los resultados observados en el laboratorio respaldan la hipótesis principal: la sustitución de credenciales estáticas por emisión dinámica reduce el tiempo durante el cual un secreto podría ser reutilizado tras una potencial exposición. Asimismo, la integración transversal de controles de seguridad en el pipeline (p. ej., escaneos de secretos y auditoría) contribuye a disminuir la probabilidad de que el Secret Sprawl se materialice en repositorios o artefactos.
+
+\subsection{Amenazas a la validez y limitaciones}
+Como limitación, el estudio se basa en un entorno de laboratorio on-premise con componentes específicos (Proxmox, LXC, k3s, Vault y PostgreSQL). La validez externa queda condicionada por la replicabilidad de la configuración y por la calidad de las políticas implementadas. Además, la medición cuantitativa (p. ej., latencias, distribución estadística de tiempos de emisión/revocación o tasa de falsos positivos en detección) no se detalla en esta versión del TFM, por lo que la evaluación se centra en evidencia funcional y trazabilidad operacional.
+
+\subsection{Trabajo futuro}
+Como trabajo futuro se recomienda ampliar el conjunto de pruebas con escenarios de fallo (p. ej., denegaciones por políticas, roturas de validación OIDC, fallos transitorios del motor de auditoría), incorporar métricas cuantitativas del pipeline y realizar correlación real de eventos hacia un SIEM. También sería deseable evaluar otras superficies de secretos (certificados, llaves de cifrado, credenciales de servicios) para generalizar el impacto de la arquitectura propuesta.
 
 \section{Conclusiones}
 La implementación y evaluación del laboratorio \textit{on-premise} demuestra la viabilidad técnica de erradicar los secretos estáticos en infraestructuras locales con altos requisitos de aislamiento.
@@ -383,7 +405,6 @@ En conclusión, desplazar la seguridad hacia las fases iniciales del desarrollo 
 \glsaddall
 \printglossaries
 
-\nocite{*}
 \newpage
 \section{Bibliografía}
 \printbibliography
