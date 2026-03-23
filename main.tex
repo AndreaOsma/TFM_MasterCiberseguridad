@@ -13,6 +13,15 @@
 \usepackage[automake=delayed]{glossaries}
 \usepackage[backend=biber,style=apa]{biblatex}
 \usepackage{csquotes}
+\usepackage{hyperref}
+
+\hypersetup{
+    hidelinks
+}
+
+\renewcommand*{\glstextformat}[1]{%
+  #1\textsuperscript{\dag}
+}
 
 \onehalfspacing
 
