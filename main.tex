@@ -10,7 +10,7 @@
 \usepackage{geometry}
 \usepackage{booktabs}
 \usepackage{xcolor}
-\usepackage{glossaries}
+\usepackage[automake=delayed]{glossaries}
 
 \onehalfspacing
 
@@ -26,7 +26,7 @@
     literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1 {Ñ}{{\~N}}1
 }
 
-\makenoidxglossaries
+\makeglossaries
 
 \newglossaryentry{oidc}{
     name={OIDC},
@@ -341,7 +341,7 @@ El punto crítico para mantener la automatización ininterrumpida es la directiv
 \subsection*{Generación Dinámica de Credenciales en PostgreSQL}
 Tras la autenticación exitosa del pipeline de CI/CD mediante \gls{oidc}, la carga de trabajo requiere acceso al motor de base de datos relacional ubicado en el \gls{lxc} 3. En lugar de inyectar una cadena de conexión estática, el runner realiza una petición a la API de \gls{vault}, configurado previamente con el motor de base de datos (Database Secrets Engine), interactúa de forma nativa con PostgreSQL para crear un rol de usuario efímero con permisos limitados (ej. \texttt{SELECT} sobre tablas específicas). Esta credencial se devuelve al runner en memoria. Una vez finalizado el TTL estipulado, o al concluir la ejecución del trabajo, \gls{vault} ejecuta automáticamente una sentencia \texttt{DROP ROLE} en la base de datos, revocando el acceso y eliminando cualquier rastro de la credencial.
 
-En el código \ref{lst:terraform-postgres} se detalla la configuración declarativa mediante Terraform para aprovisionar el motor de secretos de base de datos en \gls{vault}. Este manifiesto establece la conexión con la instancia de PostgreSQL alojada en el \gls{lxc} 3 y define las sentencias SQL parametrizadas que el sistema ejecutará en tiempo real para generar credenciales de solo lectura.
+En la configuración de Terraform se detalla la lógica declarativa para aprovisionar el motor de secretos de base de datos en \gls{vault}. Este manifiesto establece la conexión con la instancia de PostgreSQL alojada en el \gls{lxc} 3 y define las sentencias SQL parametrizadas que el sistema ejecutará en tiempo real para generar credenciales de solo lectura.
 
 % \lstinputlisting[language=bash, caption={Aprovisionamiento de motor de base de datos dinámico en Vault mediante Terraform (HCL)}, label={lst:terraform-postgres}]{code/terraform/postgres.tf}
 
