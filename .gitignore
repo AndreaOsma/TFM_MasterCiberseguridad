@@ -5,6 +5,11 @@ Thumbs.db
 
 # === Documentación derivada ===
 presentacion_tfm_marp.html
+Presentación.md
+docs/presentation/
+presentacion_tfm_marp.md
+presentacion_tfm_marp.pdf
+docs/blog/entrada_blog_tfm.md
 
 # === Código ===
 !code/
