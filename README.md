@@ -72,7 +72,7 @@ ansible-playbook playbooks/site.yml
 
 ## Stack Tecnológico
 
-* **Hipervisor**: Proxmox VE 9 (Almacenamiento optimizado en NVMe).
+* **Hipervisor**: Proxmox VE 8.4 (Almacenamiento optimizado en NVMe).
 
 * **Orquestación**: Terraform.
 

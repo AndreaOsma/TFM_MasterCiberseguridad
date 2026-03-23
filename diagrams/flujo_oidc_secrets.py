@@ -5,14 +5,16 @@ from diagrams.onprem.database import Postgresql
 from diagrams.onprem.compute import Server
 
 graph_attr = {
-    "fontsize": "18",
+    "fontsize": "20",
     "fontname": "Helvetica-Bold",
-    "pad": "0.35",
+    "pad": "0.5",
     "splines": "ortho",
-    "nodesep": "1.0",
-    "ranksep": "1.0",
-    "dpi": "220",
+    "nodesep": "1.05",
+    "ranksep": "1.1",
+    "dpi": "240",
     "bgcolor": "#FAFAFA",
+    "labelloc": "t",
+    "labeljust": "c",
 }
 
 node_attr = {
@@ -31,8 +33,8 @@ edge_attr = {
 }
 
 with Diagram(
-    "flujo_oidc_secrets",
-    filename="flujo_oidc_secrets",
+    "Flujo OIDC para emisión y revocación de credenciales",
+    filename="diagrams/flujo_oidc_secrets",
     show=False,
     direction="LR",
     graph_attr=graph_attr,

@@ -2,14 +2,16 @@ from diagrams import Diagram, Cluster, Edge
 from diagrams.onprem.compute import Server
 
 graph_attr = {
-    "fontsize": "18",
+    "fontsize": "20",
     "fontname": "Helvetica-Bold",
-    "pad": "0.35",
+    "pad": "0.5",
     "splines": "ortho",
-    "nodesep": "1.1",
-    "ranksep": "1.1",
-    "dpi": "220",
+    "nodesep": "1.15",
+    "ranksep": "1.15",
+    "dpi": "240",
     "bgcolor": "#FAFAFA",
+    "labelloc": "t",
+    "labeljust": "c",
 }
 
 node_attr = {
@@ -28,8 +30,8 @@ edge_attr = {
 }
 
 with Diagram(
-    "matriz_trazabilidad",
-    filename="matriz_trazabilidad",
+    "Matriz de trazabilidad normativa, técnica y evidencial",
+    filename="diagrams/matriz_trazabilidad",
     show=False,
     direction="LR",
     graph_attr=graph_attr,
