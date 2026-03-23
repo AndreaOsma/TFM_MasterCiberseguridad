@@ -9,7 +9,7 @@ terraform {
 
 provider "proxmox" {
   endpoint = var.proxmox_endpoint
-  insecure = true # Solo para entornos de laboratorio locales sin CA interna
+  insecure = var.proxmox_insecure # Solo para entornos de laboratorio locales sin CA interna
 }
 
 # ==========================================
@@ -17,14 +17,14 @@ provider "proxmox" {
 # ==========================================
 resource "proxmox_virtual_environment_container" "lxc_gitea" {
   node_name = var.proxmox_node
-  vm_id     = 501
+  vm_id     = var.vm_ids.gitea
 
   initialization {
     hostname = "gitea-runner"
     ip_config {
       ipv4 {
-        address = "10.0.0.11/24"
-        gateway = "10.0.0.1"
+        address = var.lab_ipv4.gitea
+        gateway = var.lab_ipv4.gateway
       }
     }
     user_account {
@@ -51,14 +51,14 @@ resource "proxmox_virtual_environment_container" "lxc_gitea" {
 # ==========================================
 resource "proxmox_virtual_environment_container" "lxc_vault" {
   node_name = var.proxmox_node
-  vm_id     = 502
+  vm_id     = var.vm_ids.vault
 
   initialization {
     hostname = "vault-server"
     ip_config {
       ipv4 {
-        address = "10.0.0.20/24"
-        gateway = "10.0.0.1"
+        address = var.lab_ipv4.vault
+        gateway = var.lab_ipv4.gateway
       }
     }
     user_account {
@@ -85,14 +85,14 @@ resource "proxmox_virtual_environment_container" "lxc_vault" {
 # ==========================================
 resource "proxmox_virtual_environment_container" "lxc_postgres" {
   node_name = var.proxmox_node
-  vm_id     = 503
+  vm_id     = var.vm_ids.postgres
 
   initialization {
     hostname = "postgres-db"
     ip_config {
       ipv4 {
-        address = "10.0.0.30/24"
-        gateway = "10.0.0.1"
+        address = var.lab_ipv4.postgres
+        gateway = var.lab_ipv4.gateway
       }
     }
     user_account {
@@ -119,7 +119,7 @@ resource "proxmox_virtual_environment_container" "lxc_postgres" {
 # ==========================================
 resource "proxmox_virtual_environment_vm" "vm_k3s" {
   node_name = var.proxmox_node
-  vm_id     = 504
+  vm_id     = var.vm_ids.k3s
   name      = "k3s-cluster"
 
   agent {
@@ -145,8 +145,8 @@ resource "proxmox_virtual_environment_vm" "vm_k3s" {
   initialization {
     ip_config {
       ipv4 {
-        address = "10.0.0.40/24"
-        gateway = "10.0.0.1"
+        address = var.lab_ipv4.k3s
+        gateway = var.lab_ipv4.gateway
       }
     }
     user_account {
@@ -154,7 +154,7 @@ resource "proxmox_virtual_environment_vm" "vm_k3s" {
       keys     = [var.ssh_public_key]
     }
   }
-  
+
   # Requiere una imagen Cloud-Init precargada en Proxmox
   # file_id = "local:iso/debian-12-genericcloud-amd64.img"
 }

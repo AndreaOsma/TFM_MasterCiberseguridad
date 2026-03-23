@@ -1,8 +1,8 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 echo "[*] 1. Instalando dependencias base y repositorios..."
-apt-get update && apt-get install -y gnupg software-properties-common curl wget sshpass
+apt-get update && apt-get install -y gnupg software-properties-common curl wget
 
 # Añadir repositorio de HashiCorp
 wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | tee /usr/share/keyrings/hashicorp-archive-keyring.gpg >/dev/null
@@ -18,9 +18,19 @@ DEBIAN_IMG="debian-12-genericcloud-amd64.img"
 # URL oficial de la imagen genérica de Cloud para Debian 12
 URL="https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2"
 
+mkdir -p "$ISO_DIR"
+if [ ! -w "$ISO_DIR" ]; then
+    echo "[ERROR] No se puede escribir en $ISO_DIR. Ejecuta el script con permisos adecuados."
+    exit 1
+fi
+
 if [ ! -f "$ISO_DIR/$DEBIAN_IMG" ]; then
     # Descargamos como qcow2 y lo renombramos a .img para el Terraform
     wget -O "$ISO_DIR/$DEBIAN_IMG" "$URL"
+    if [ ! -s "$ISO_DIR/$DEBIAN_IMG" ]; then
+        echo "[ERROR] La descarga de $DEBIAN_IMG ha fallado o está vacía."
+        exit 1
+    fi
     echo "[+] Imagen descargada correctamente en $ISO_DIR/$DEBIAN_IMG"
 else
     echo "[!] La imagen ya existe, saltando descarga."
