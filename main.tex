@@ -15,17 +15,21 @@
 \usepackage{csquotes}
 \usepackage{hyperref}
 
+\usepackage[dvipsnames]{xcolor}
+\usepackage{hyperref}
+
 \hypersetup{
-    hidelinks
+    hidelinks,
+    colorlinks=false
 }
 
 \newcounter{glsnum}
 \setcounter{glsnum}{0}
 
 \renewcommand*{\glstextformat}[1]{
-  #1
+  \begin{NoHyper}#1\end{NoHyper}
   \stepcounter{glsnum}
-  \textsuperscript{\theglsnum}
+  \hyperlink{glo:\glslabel}{\textsuperscript{\textcolor{MidnightBlue}{\theglsnum}}}
 }
 
 \onehalfspacing
