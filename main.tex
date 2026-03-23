@@ -88,6 +88,66 @@
     description={Modelo de seguridad perimetral tradicional basado en la premisa de defender una red interna segura mediante barreras externas, como firewalls. Asume que los usuarios y dispositivos dentro del perímetro son de confianza, un enfoque que resulta ineficaz en entornos distribuidos modernos.}
 }
 
+\newglossaryentry{sast}{
+    name={SAST},
+    description={Static Application Security Testing. Análisis del código fuente en busca de vulnerabilidades aplicando reglas estáticas antes de la ejecución.}
+}
+
+\newglossaryentry{dast}{
+    name={DAST},
+    description={Dynamic Application Security Testing. Pruebas de seguridad sobre una aplicación en ejecución para identificar vulnerabilidades mediante interacciones y análisis dinámico.}
+}
+
+\newglossaryentry{iast}{
+    name={IAST},
+    description={Interactive Application Security Testing. Combinación de técnicas de análisis dinámico e instrumentación en tiempo de ejecución para detectar vulnerabilidades con contexto.}
+}
+
+\newglossaryentry{mfa}{
+    name={MFA},
+    description={Multi-Factor Authentication. Autenticación que exige dos o más factores (p. ej., algo que eres, algo que tienes, algo que sabes).}
+}
+
+\newglossaryentry{policyascode}{
+    name={Policy-as-Code},
+    description={Modelo que codifica políticas de seguridad como artefactos versionados y ejecutables automáticamente para aplicar controles consistentes.}
+}
+
+\newglossaryentry{cli}{
+    name={CLI},
+    description={Command-Line Interface. Interfaz de línea de comandos para operar herramientas y automatizar tareas.}
+}
+
+\newglossaryentry{vault}{
+    name={Vault},
+    description={HashiCorp Vault. Bóveda que gestiona secretos y credenciales con cifrado, control de acceso y generación dinámica según políticas.}
+}
+
+\newglossaryentry{lxc}{
+    name={LXC},
+    description={Linux Containers. Tecnología de contenedores basada en aislamiento a nivel de sistema operativo en Linux.}
+}
+
+\newglossaryentry{kubernetes}{
+    name={Kubernetes},
+    description={Plataforma de orquestación de contenedores que automatiza despliegue, escalado y operación de aplicaciones.}
+}
+
+\newglossaryentry{k3s}{
+    name={k3s},
+    description={Distribución ligera de Kubernetes, diseñada para simplificar la instalación y operación en entornos con recursos limitados.}
+}
+
+\newglossaryentry{raft}{
+    name={Raft},
+    description={Algoritmo de consenso utilizado para replicación y mantenimiento de estado en sistemas distribuidos (p. ej., motores de almacenamiento en Vault).}
+}
+
+\newglossaryentry{tls}{
+    name={TLS},
+    description={Transport Layer Security. Protocolo criptográfico para proteger comunicaciones en redes.}
+}
+
 \setcounter{tocdepth}{3}
 \setcounter{secnumdepth}{3}
 
@@ -135,57 +195,53 @@ En el paradigma actual, la red es dinámica y, por definición, hostil. Por tant
 
 El término secret sprawl define la distribución descontrolada de credenciales (claves API, certificados, tokens, contraseñas) a lo largo del ciclo de vida del desarrollo de software (SDLC). En un entorno de Infraestructura como Código (IaC), el riesgo aumenta considerablemente.
 
-- Fugas en Control de Versiones: La inmutabilidad de los sistemas como Git implica que un secreto subido accidentalmente persiste en el historial, requiriendo un proceso complejo de rewriting history o la invalidación inmediata de la credencial.
-
-- Variables de Entorno Inseguras: El uso de archivos .env o variables de sistema sin cifrar en servidores de CI/CD (Jenkins, GitHub Actions) expone credenciales a cualquier proceso con privilegios de lectura en el entorno.
-
-- Certificados X.509 y Claves SSH Compartidas: La emisión de certificados de larga duración o el uso de pares de claves SSH estáticas sin el respaldo de una Autoridad de Certificación (CA) efímera provoca que, si el material privado es comprometido, el acceso se mantenga de forma prolongada sin ser detectado.
-
-- Credenciales Hardcodeadas en Código Fuente: La práctica de incrustar tokens o contraseñas directamente en los repositorios expone la información a cualquier usuario con privilegios de lectura y propaga el secreto a través de los artefactos de construcción.
+\begin{itemize}
+    \item \textbf{Fugas en Control de Versiones:} La inmutabilidad de los sistemas como Git implica que un secreto subido accidentalmente persiste en el historial, requiriendo un proceso complejo de rewriting history o la invalidación inmediata de la credencial.
+    \item \textbf{Variables de Entorno Inseguras:} El uso de archivos .env o variables de sistema sin cifrar en servidores de CI/CD (Jenkins, GitHub Actions) expone credenciales a cualquier proceso con privilegios de lectura en el entorno.
+    \item \textbf{Certificados X.509 y Claves SSH Compartidas:} La emisión de certificados de larga duración o el uso de pares de claves SSH estáticas sin el respaldo de una Autoridad de Certificación (CA) efímera provoca que, si el material privado es comprometido, el acceso se mantenga de forma prolongada sin ser detectado.
+    \item \textbf{Credenciales Hardcodeadas en Código Fuente:} La práctica de incrustar tokens o contraseñas directamente en los repositorios expone la información a cualquier usuario con privilegios de lectura y propaga el secreto a través de los artefactos de construcción.
+\end{itemize}
 
 \subsubsection{El Desafío de la Escala: Máquinas vs. Humanos}
 
-Investigaciones recientes sugieren que las identidades de máquinas (servicios, contenedores, bots) crecen a un ritmo cinco veces superior al de las identidades humanas. A diferencia de un operador humano, que puede validar su identidad aportando biometría o un token de hardware en un flujo MFA tradicional, una carga de trabajo automatizada carece de este factor interactivo ("algo que eres" o "algo que tienes").
+Investigaciones recientes sugieren que las identidades de máquinas (servicios, contenedores, bots) crecen a un ritmo cinco veces superior al de las identidades humanas. A diferencia de un operador humano, que puede validar su identidad aportando biometría o un token de hardware en un flujo \gls{mfa} tradicional, una carga de trabajo automatizada carece de este factor interactivo ("algo que eres" o "algo que tienes").
 
-Esto exige sustituir el MFA humano por la validación concurrente de múltiples atributos criptográficos y contextuales. Se requiere la presentación de credenciales como certificados TLS mutuos (mTLS) o tokens JWT firmados, combinados con la verificación de la IP de origen, el namespace o la rama del repositorio en tiempo de ejecución. Se espera que la validación estricta de estos metadatos limite la emisión de secretos exclusivamente a las cargas de trabajo legítimas.
+Esto exige sustituir el \gls{mfa} humano por la validación concurrente de múltiples atributos criptográficos y contextuales. Se requiere la presentación de credenciales como certificados \gls{tls} mutuos (\gls{mtls}) o tokens JWT firmados, combinados con la verificación de la IP de origen, el namespace o la rama del repositorio en tiempo de ejecución. Se espera que la validación estricta de estos metadatos limite la emisión de secretos exclusivamente a las cargas de trabajo legítimas.
 
 \subsubsection{Riesgos de Seguridad Derivados del Secret Sprawl}
 El almacenamiento incontrolado y la exposición de credenciales generan vectores de ataque críticos en las infraestructuras modernas. La literatura académica señala que la exposición de secretos en pipelines de CI/CD y en repositorios de código facilita la ejecución de los siguientes escenarios de compromiso:
 
-- Movimiento Lateral y Escalada de Privilegios: En arquitecturas planas o basadas en microservicios, un atacante que obtiene un token de acceso básico puede pivotar hacia sistemas críticos o bases de datos si no existe una autenticación estricta.
-
-- Ataques a la Cadena de Suministro (Supply Chain Attacks): La inyección de código malicioso en los flujos de integración continua a menudo se logra explotando credenciales expuestas en los repositorios, lo que compromete las fases de construcción y despliegue del software de forma automatizada.
-
-- Persistencia a Largo Plazo: Las credenciales estáticas que carecen de rotación permiten a los atacantes mantener un acceso indetectable a la infraestructura (comportamiento esperado tras una intrusión exitosa), incluso después de que los equipos de respuesta a incidentes mitiguen la vulnerabilidad técnica inicial que permitió la entrada.
+\begin{itemize}
+    \item \textbf{Movimiento Lateral y Escalada de Privilegios:} En arquitecturas planas o basadas en microservicios, un atacante que obtiene un token de acceso básico puede pivotar hacia sistemas críticos o bases de datos si no existe una autenticación estricta.
+    \item \textbf{Ataques a la Cadena de Suministro (Supply Chain Attacks):} La inyección de código malicioso en los flujos de integración continua a menudo se logra explotando credenciales expuestas en los repositorios, lo que compromete las fases de construcción y despliegue del software de forma automatizada.
+    \item \textbf{Persistencia a Largo Plazo:} Las credenciales estáticas que carecen de rotación permiten a los atacantes mantener un acceso indetectable a la infraestructura (comportamiento esperado tras una intrusión exitosa), incluso después de que los equipos de respuesta a incidentes mitiguen la vulnerabilidad técnica inicial que permitió la entrada.
+\end{itemize}
 
 \subsubsection{El Ciclo de Vida del Secreto}
 
 Para mitigar los riesgos asociados a la dispersión de credenciales, la gestión de secretos debe tratarse como un proceso continuo e integrado. Los secretos se consideran artefactos de primer nivel que requieren un ciclo de vida definido desde su creación hasta su destrucción. Este ciclo consta de las siguientes fases:
 
-1. Generación: Creación de la credencial, preferiblemente de forma dinámica y asociando un Tiempo de Vida (TTL) estrictamente limitado a la misma.
-
-2. Almacenamiento Seguro: Custodia del secreto en un almacén centralizado que proporcione cifrado y aplique controles de acceso basados en políticas (Policy-as-Code) para definir quién, y bajo qué condiciones, puede interactuar con el dato.
-
-3. Distribución e Inyección: Entrega temporal del secreto a la identidad que lo solicita (humana o de máquina) en tiempo de ejecución, evitando en todo momento su escritura en disco.
-
-4. Rotación: Renovación periódica o basada en eventos de las credenciales, un proceso fundamental para invalidar versiones anteriores y acotar drásticamente la ventana de exposición ante una posible brecha.
-
-5. Revocación y Auditoría: Invalidación del secreto en el sistema de destino tras expirar su TTL, manteniendo un registro inmutable de todas las operaciones para facilitar labores de cumplimiento normativo y diagnóstico forense.
+\begin{enumerate}
+    \item \textbf{Generación:} Creación de la credencial, preferiblemente de forma dinámica y asociando un Tiempo de Vida (TTL) estrictamente limitado a la misma.
+    \item \textbf{Almacenamiento Seguro:} Custodia del secreto en un almacén centralizado que proporcione cifrado y aplique controles de acceso basados en políticas (\gls{policyascode}) para definir quién, y bajo qué condiciones, puede interactuar con el dato.
+    \item \textbf{Distribución e Inyección:} Entrega temporal del secreto a la identidad que lo solicita (humana o de máquina) en tiempo de ejecución, evitando en todo momento su escritura en disco.
+    \item \textbf{Rotación:} Renovación periódica o basada en eventos de las credenciales, un proceso fundamental para invalidar versiones anteriores y acotar drásticamente la ventana de exposición ante una posible brecha.
+    \item \textbf{Revocación y Auditoría:} Invalidación del secreto en el sistema de destino tras expirar su TTL, manteniendo un registro inmutable de todas las operaciones para facilitar labores de cumplimiento normativo y diagnóstico forense.
+\end{enumerate}
 
 \subsubsection{Integración Transversal en el SDLC (DevSecOps)}
 
 La gestión de identidades y secretos interactúa a lo largo de todo el Ciclo de Vida del Desarrollo de Software (SDLC). Aplicar el principio de shift-left security exige implementar controles técnicos desde las fases más tempranas:
 
-- Fase de Código (Code and Commit): Constituye la primera línea de defensa. Dado que es habitual que se introduzcan credenciales hardcodeadas de manera inadvertida, en esta etapa se despliegan escaneos de secretos y hooks de pre-commit en los repositorios locales para bloquear la inyección en el control de versiones.
-
-- Fase de Construcción (Build and CI): Los servidores de Integración Continua requieren acceso a repositorios de artefactos y entornos de prueba. El uso de variables de entorno estáticas en esta fase representa un riesgo significativo de fuga de datos. Los secretos deben ser inyectados dinámicamente y enmascarados para evitar su volcado accidental en los registros (logs) de ejecución.
-
-- Fase de Pruebas (Test): Las herramientas de análisis dinámico e interactivo (DAST e IAST) necesitan credenciales temporales para ejecutar sus escaneos en los entornos de validación. Esta fase garantiza la separación estricta entre las credenciales de prueba y las de producción.
-
-- Fase de Despliegue y Operación (Deploy and Run): En la etapa final, las cargas de trabajo contenerizadas u orquestadas solicitan sus credenciales en tiempo de ejecución. El gestor central valida la identidad criptográfica de la carga de trabajo y entrega un acceso efímero vinculado a políticas contextuales.
+\begin{itemize}
+    \item \textbf{Fase de Código (Code and Commit):} Constituye la primera línea de defensa. Dado que es habitual que se introduzcan credenciales hardcodeadas de manera inadvertida, en esta etapa se despliegan escaneos de secretos y hooks de pre-commit en los repositorios locales para bloquear la inyección en el control de versiones.
+    \item \textbf{Fase de Construcción (Build and CI):} Los servidores de Integración Continua requieren acceso a repositorios de artefactos y entornos de prueba. El uso de variables de entorno estáticas en esta fase representa un riesgo significativo de fuga de datos. Los secretos deben ser inyectados dinámicamente y enmascarados para evitar su volcado accidental en los registros (logs) de ejecución.
+    \item \textbf{Fase de Pruebas (Test):} Las herramientas de análisis dinámico e interactivo (\gls{dast} e \gls{iast}) necesitan credenciales temporales para ejecutar sus escaneos en los entornos de validación. Esta fase garantiza la separación estricta entre las credenciales de prueba y las de producción.
+    \item \textbf{Fase de Despliegue y Operación (Deploy and Run):} En la etapa final, las cargas de trabajo contenerizadas u orquestadas solicitan sus credenciales en tiempo de ejecución. El gestor central valida la identidad criptográfica de la carga de trabajo y entrega un acceso efímero vinculado a políticas contextuales.
+\end{itemize}
 
 \subsection{Trazabilidad Forense y Dispositivos de Auditoría}
-Un pilar fundamental de la Arquitectura Zero Trust  es la visibilidad total sobre las peticiones de acceso. Durante las pruebas, se habilitó el motor de auditoría de Vault para registrar cada interacción en formato JSON. Este registro inmutable captura el identificador de la entidad solicitante, la política evaluada, la ruta del secreto y la marca de tiempo exacta.
+Un pilar fundamental de la Arquitectura Zero Trust es la visibilidad total sobre las peticiones de acceso. Durante las pruebas, se habilitó el motor de auditoría de \gls{vault} para registrar cada interacción en formato JSON. Este registro inmutable captura el identificador de la entidad solicitante, la política evaluada, la ruta del secreto y la marca de tiempo exacta.
 
 La exportación de estos registros estructurados hacia un sistema SIEM centralizado permite la detección de anomalías en tiempo real, como múltiples intentos de acceso denegados desde una IP específica, garantizando así los requisitos de resiliencia y auditoría continua exigidos por marcos normativos actuales.
 
@@ -203,7 +259,7 @@ La motivación fundamental de este proyecto es cerrar esta brecha tecnológica, 
 
 La presente investigación plantea que la integración de una arquitectura de seguridad centrada en la identidad, materializada a través de una bóveda criptográfica centralizada, reduce sustancialmente la superficie de ataque en entornos de nube privada sujetos a estrictos requisitos de soberanía del dato y aislamiento. Al transicionar de un modelo de confianza perimetral estático a un enfoque anclado en los principios de Zero Trust, donde la inyección de credenciales se realiza de forma dinámica y estrictamente bajo demanda, se espera que la ventana de oportunidad para la explotación de credenciales comprometidas se acote drásticamente frente a ataques automatizados.
 
-Asimismo, se hipotetiza que la inserción de controles de seguridad de forma transversal (SAST, DAST y análisis de composición de software) directamente en el pipeline de Integración y Despliegue Continuo (CI/CD) madura la postura de seguridad del ciclo de vida del software.Retirar el material criptográfico persistente del código fuente y de los repositorios de control de versiones mitiga el riesgo de Secret Sprawl y dificulta el movimiento lateral o la escalada de privilegios en caso de una intrusión inicial.
+Asimismo, se hipotetiza que la inserción de controles de seguridad de forma transversal (\gls{sast}, \gls{dast} y análisis de composición de software) directamente en el pipeline de Integración y Despliegue Continuo (CI/CD) madura la postura de seguridad del ciclo de vida del software. Retirar el material criptográfico persistente del código fuente y de los repositorios de control de versiones mitiga el riesgo de Secret Sprawl y dificulta el movimiento lateral o la escalada de privilegios en caso de una intrusión inicial.
 
 Finalmente, desde el punto de vista de la ingeniería de la infraestructura, se postula que la orquestación de este ecosistema mediante paradigmas de Infraestructura como Código (IaC) desvinculando la capa de gestión de acceso de la topología de red subyacente proporciona la abstracción necesaria para escalar el modelo operativo. El uso de manifiestos declarativos y automatización modular facilita la exportación de esta misma arquitectura desde un entorno on-premise virtualizado hacia un modelo de nube híbrida pública, manteniendo la cohesión y las políticas de seguridad inmutables sin requerir una reingeniería profunda de la lógica de acceso.
 
@@ -213,11 +269,11 @@ Finalmente, desde el punto de vista de la ingeniería de la infraestructura, se 
 La propuesta central de este proyecto consiste en el diseño e implementación de una arquitectura centralizada de gestión de secretos, fundamentada en el paradigma Zero Trust. El objetivo principal es la sustitución de credenciales estáticas por flujos de inyección dinámica, orquestados íntegramente mediante Infraestructura como Código (IaC).
 
 \subsection{Diseño de la Arquitectura Lógica}
-El núcleo del sistema reside en una bóveda criptográfica de alta disponibilidad (como HashiCorp Vault), configurada para operar como la única fuente de verdad para el material sensible. La arquitectura se segmenta en tres planos funcionales:
+El núcleo del sistema reside en una bóveda criptográfica de alta disponibilidad (como HashiCorp \gls{vault}), configurada para operar como la única fuente de verdad para el material sensible. La arquitectura se segmenta en tres planos funcionales:
 
 \begin{itemize}
     \item \textbf{Plano de Autenticación:} Las cargas de trabajo (contenedores, pipelines de despliegue) no poseen secretos iniciales estáticos en disco. Se autentican contra la bóveda utilizando identidades nativas de su entorno de ejecución, tales como tokens JWT en entornos de CI/CD mediante \gls{oidc} (OpenID Connect) o Service Accounts en orquestadores.
-    \item \textbf{Plano de Autorización:} Una vez autenticada la entidad no humana, un motor de políticas (Policy-as-Code) evalúa de forma estricta si la identidad posee los privilegios mínimos necesarios para acceder a la ruta del secreto solicitado.
+    \item \textbf{Plano de Autorización:} Una vez autenticada la entidad no humana, un motor de políticas (\gls{policyascode}) evalúa de forma estricta si la identidad posee los privilegios mínimos necesarios para acceder a la ruta del secreto solicitado.
     \item \textbf{Plano de Emisión Dinámica:} En lugar de devolver una credencial de larga duración, el sistema genera credenciales efímeras bajo demanda (por ejemplo, usuarios temporales de bases de datos o certificados de corta duración) con un Tiempo de Vida (TTL) ajustado al tiempo de ejecución de la tarea.
 \end{itemize}
 
@@ -229,20 +285,20 @@ Al emplear federación de identidades (\gls{oidc}) para los flujos de integraci�
 \subsection{Despliegue Inmutable y Operativa de Ingeniería}
 La abstracción de toda la infraestructura y configuración de seguridad se define mediante manifiestos declarativos. La inicialización de la bóveda, la definición de roles y la asignación de políticas de acceso se gestionan como código, permitiendo un versionado estricto y un control de cambios mediante flujos de revisión. 
 
-Fomentando una operativa técnica de alto rendimiento y reduciendo la fricción en la automatización, la interacción con el sistema en fases de administración e ingeniería se realiza exclusivamente mediante herramientas de interfaz de línea de comandos (CLI) y editores de terminal. Se descarta la dependencia de interfaces gráficas (GUI), lo que facilita la creación de scripts de automatización y establece un registro de comandos auditable para cada modificación en el estado de la seguridad. Es por este motivo que la arquitectura propuesta se despliega mediante Terraform.
+Fomentando una operativa técnica de alto rendimiento y reduciendo la fricción en la automatización, la interacción con el sistema en fases de administración e ingeniería se realiza exclusivamente mediante herramientas de interfaz de línea de comandos (\gls{cli}) y editores de terminal. Se descarta la dependencia de interfaces gráficas (GUI), lo que facilita la creación de scripts de automatización y establece un registro de comandos auditable para cada modificación en el estado de la seguridad. Es por este motivo que la arquitectura propuesta se despliega mediante Terraform.
 
 \section{Demostración}
 
 \subsection{Entorno de Pruebas}
 Para la validación empírica de la arquitectura propuesta, se ha desplegado un laboratorio \textit{on-premise} sobre un hipervisor tipo 1 (Proxmox VE 9). La infraestructura de hardware asignada consta de 48 GB de memoria RAM, un disco de estado sólido (SSD) de 256 GB para el almacenamiento operativo de alta velocidad gestionado mediante aprovisionamiento fino (\textit{thin provisioning}), y un disco duro mecánico (HDD) de 1 TB destinado a volcados de seguridad periódicos (\texttt{vzdump}).
 
-La topología de red y computación se segmenta utilizando una combinación de contenedores Linux (LXC) para servicios base y Máquinas Virtuales (VM) para la orquestación, distribuidos de la siguiente manera:
+La topología de red y computación se segmenta utilizando una combinación de contenedores Linux (\gls{lxc}) para servicios base y Máquinas Virtuales (VM) para la orquestación, distribuidos de la siguiente manera:
 
 \begin{itemize}
-    \item \textbf{LXC 1 (Gitea v1.21 + Act Runner):} Plataforma ligera para el control de versiones y la ejecución de pipelines de CI/CD, configurada para emitir tokens \gls{oidc}.
-    \item \textbf{LXC 2 (HashiCorp Vault v1.15):} Bóveda criptográfica central con motor de almacenamiento integrado (Raft) en configuración de nodo único.
-    \item \textbf{LXC 3 (PostgreSQL v16):} Motor de base de datos relacional que actúa como sistema objetivo para la inyección dinámica de credenciales.
-    \item \textbf{VM 1 (K3s v1.28):} Clúster de Kubernetes ligero sobre una distribución Debian minimalista. El uso de una máquina virtual proporciona aislamiento a nivel de kernel, lo cual mitiga vectores de escape de contenedores.
+    \item \textbf{\gls{lxc} 1 (Gitea v1.21 + Act Runner):} Plataforma ligera para el control de versiones y la ejecución de pipelines de CI/CD, configurada para emitir tokens \gls{oidc}.
+    \item \textbf{\gls{lxc} 2 (HashiCorp \gls{vault} v1.15):} Bóveda criptográfica central con motor de almacenamiento integrado (\gls{raft}) en configuración de nodo único.
+    \item \textbf{\gls{lxc} 3 (PostgreSQL v16):} Motor de base de datos relacional que actúa como sistema objetivo para la inyección dinámica de credenciales.
+    \item \textbf{VM 1 (\gls{k3s} v1.28):} Clúster de \gls{kubernetes} ligero sobre una distribución Debian minimalista. El uso de una máquina virtual proporciona aislamiento a nivel de kernel, lo cual mitiga vectores de escape de contenedores.
 \end{itemize}
 
 \begin{figure}[htbp]
@@ -252,12 +308,12 @@ La topología de red y computación se segmenta utilizando una combinación de c
     \label{fig:topologia}
 \end{figure}
 
-Fomentando una operativa técnica ágil, la administración del entorno y la configuración de políticas en Vault se realiza de forma exclusiva mediante su CLI y la edición de manifiestos con \texttt{vi}. Esto permite una integración natural con repositorios de Infraestructura como Código (Terraform) y mantiene un registro de auditoría estricto, prescindiendo totalmente de interfaces gráficas.
+Fomentando una operativa técnica ágil, la administración del entorno y la configuración de políticas en \gls{vault} se realiza de forma exclusiva mediante su \gls{cli} y la edición de manifiestos con \texttt{vi}. Esto permite una integración natural con repositorios de Infraestructura como Código (Terraform) y mantiene un registro de auditoría estricto, prescindiendo totalmente de interfaces gráficas.
 
 \subsection{Estrategia de Despliegue mediante IaC}
-La orquestación de la seguridad y el control de accesos se define íntegramente a través de archivos de configuración declarativos (HCL) utilizando Terraform. Desde la terminal, mediante la edición de estos manifiestos, se establece la configuración del proveedor de HashiCorp Vault, la creación de políticas estructuradas (Policy-as-Code) y la habilitación de los motores de secretos.
+La orquestación de la seguridad y el control de accesos se define íntegramente a través de archivos de configuración declarativos (HCL) utilizando Terraform. Desde la terminal, mediante la edición de estos manifiestos, se establece la configuración del proveedor de HashiCorp \gls{vault}, la creación de políticas estructuradas (\gls{policyascode}) y la habilitación de los motores de secretos.
 
-Esta estrategia permite versionar la infraestructura de seguridad directamente en el repositorio de Gitea. Al aplicar los cambios de estado de forma determinista, se garantiza la inmutabilidad del entorno y se elimina la configuración manual.  Al prescindir de interfaces gráficas y operar exclusivamente mediante CLI, cualquier modificación en los roles o en los tiempos de vida (TTL) de los secretos queda registrada en el control de versiones, habilitando un proceso de revisión por pares (Pull Requests) antes de su aplicación en producción.
+Esta estrategia permite versionar la infraestructura de seguridad directamente en el repositorio de Gitea. Al aplicar los cambios de estado de forma determinista, se garantiza la inmutabilidad del entorno y se elimina la configuración manual.  Al prescindir de interfaces gráficas y operar exclusivamente mediante \gls{cli}, cualquier modificación en los roles o en los tiempos de vida (TTL) de los secretos queda registrada en el control de versiones, habilitando un proceso de revisión por pares (Pull Requests) antes de su aplicación en producción.
 
 \subsubsection{Instalación de dependencias en Proxmox}
 Para garantizar la reproducibilidad del entorno de laboratorio en el hipervisor Proxmox, la fase inicial del despliegue requiere la preparación del host. Este proceso se ha automatizado mediante un script de inicialización (\textit{shell script}) que estandariza las dependencias operativas antes de la ejecución de cualquier manifiesto declarativo.
@@ -266,7 +322,7 @@ El script cumple tres funciones críticas en la cadena de aprovisionamiento:
 
 \begin{itemize}
     \item \textbf{Gestión de Repositorios y Paquetes:} Se integran las claves GPG oficiales de HashiCorp en el anillo de claves del sistema para validar la autenticidad de los binarios, procediendo a la instalación de Terraform y Ansible. La presencia de estas herramientas en el nodo de control es un prerrequisito para ejecutar la orquestación.
-    \item \textbf{Obtención de Imágenes Cloud-Init:} Para el despliegue de la máquina virtual destinada al clúster de K3s, se requiere una imagen base preparada para la inyección de metadatos. El script descarga la imagen genérica oficial de Debian 12 (\texttt{qcow2}) y la aprovisiona en el almacenamiento local del hipervisor (\texttt{/var/lib/vz/template/iso}).
+    \item \textbf{Obtención de Imágenes Cloud-Init:} Para el despliegue de la máquina virtual destinada al clúster de \gls{k3s}, se requiere una imagen base preparada para la inyección de metadatos. El script descarga la imagen genérica oficial de Debian 12 (\texttt{qcow2}) y la aprovisiona en el almacenamiento local del hipervisor (\texttt{/var/lib/vz/template/iso}).
     \item \textbf{Estandarización del Formato:} La imagen descargada se renombra automáticamente con la extensión \texttt{.img}, un requisito del proveedor de Terraform para Proxmox al procesar plantillas pre-configuradas de Cloud-Init.
 \end{itemize}
 
@@ -283,9 +339,9 @@ El punto crítico para mantener la automatización ininterrumpida es la directiv
 \lstinputlisting[language=bash, caption={Aprovisionamiento de infraestructura lógica mediante Terraform}, label={lst:terraform-main}]{code/terraform/main.tf}
 
 \subsection*{Generación Dinámica de Credenciales en PostgreSQL}
-Tras la autenticación exitosa del pipeline de CI/CD mediante \gls{oidc} , la carga de trabajo requiere acceso al motor de base de datos relacional ubicado en el LXC 3. En lugar de inyectar una cadena de conexión estática, el runner realiza una petición a la API de Vault.Vault, configurado previamente con el motor de base de datos (Database Secrets Engine), interactúa de forma nativa con PostgreSQL  para crear un rol de usuario efímero con permisos limitados (ej. \texttt{SELECT} sobre tablas específicas).  Esta credencial se devuelve al runner en memoria. Una vez finalizado el TTL estipulado, o al concluir la ejecución del trabajo, Vault ejecuta automáticamente una sentencia \texttt{DROP ROLE} en la base de datos, revocando el acceso y eliminando cualquier rastro de la credencial.
+Tras la autenticación exitosa del pipeline de CI/CD mediante \gls{oidc}, la carga de trabajo requiere acceso al motor de base de datos relacional ubicado en el \gls{lxc} 3. En lugar de inyectar una cadena de conexión estática, el runner realiza una petición a la API de \gls{vault}, configurado previamente con el motor de base de datos (Database Secrets Engine), interactúa de forma nativa con PostgreSQL para crear un rol de usuario efímero con permisos limitados (ej. \texttt{SELECT} sobre tablas específicas). Esta credencial se devuelve al runner en memoria. Una vez finalizado el TTL estipulado, o al concluir la ejecución del trabajo, \gls{vault} ejecuta automáticamente una sentencia \texttt{DROP ROLE} en la base de datos, revocando el acceso y eliminando cualquier rastro de la credencial.
 
-En el código \ref{lst:terraform-postgres} se detalla la configuración declarativa mediante Terraform para aprovisionar el motor de secretos de base de datos en Vault. Este manifiesto establece la conexión con la instancia de PostgreSQL alojada en el LXC 3 y define las sentencias SQL parametrizadas que el sistema ejecutará en tiempo real para generar credenciales de solo lectura.
+En el código \ref{lst:terraform-postgres} se detalla la configuración declarativa mediante Terraform para aprovisionar el motor de secretos de base de datos en \gls{vault}. Este manifiesto establece la conexión con la instancia de PostgreSQL alojada en el \gls{lxc} 3 y define las sentencias SQL parametrizadas que el sistema ejecutará en tiempo real para generar credenciales de solo lectura.
 
 % \lstinputlisting[language=bash, caption={Aprovisionamiento de motor de base de datos dinámico en Vault mediante Terraform (HCL)}, label={lst:terraform-postgres}]{code/terraform/postgres.tf}
 
