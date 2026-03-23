@@ -390,25 +390,6 @@ La reproducibilidad del despliegue se valida verificando que el laboratorio on-p
 
 \section{Discusión}
 
-\subsection{Matriz hipótesis-evidencia}
-\begin{center}
-\begin{tabular}{@{}l l l@{}}
-\toprule
-Hipótesis & Evidencia en el laboratorio & Conclusión \\
-\midrule
-H1: Basar el acceso en \gls{zerotrust} y emitir credenciales dinámicas reduce el margen temporal de exposición. &
-Emisión efímera + revocación mediante \texttt{DROP ROLE}; coherencia con el flujo de emisión descrito. &
-Apoyada (funcional) \\
-H2: Integrar controles de seguridad en el \gls{cicd} reduce persistencia de secretos. &
-Arquitectura orientada a prevención y trazabilidad; sin métricas cuantitativas de tasa de hallazgos en esta versión. &
-Parcial (funcional + trazabilidad) \\
-H3: Orquestar con IaC mejora reproducibilidad e invariabilidad operativa. &
-Despliegue reproducible desde manifiestos y scripts versionados (Listados \ref{lst:setup} y \ref{lst:terraform-main}). &
-Apoyada (funcional) \\
-\bottomrule
-\end{tabular}
-\end{center}
-
 \subsection{Confirmación de hipótesis y relación con el Secret Sprawl}
 Los resultados observados en el laboratorio respaldan la hipótesis principal: la sustitución de credenciales estáticas por emisión dinámica reduce el tiempo durante el cual una credencial podría reutilizarse tras una potencial exposición, mitigando \gls{secretsprawl}. Además, la trazabilidad habilitada en \gls{vault} y la arquitectura orientada a prevención son coherentes con buenas prácticas de secret management y secret scanning \parencite{owasp_secrets_management_cheat_sheet,github_secret_scanning,vault_audit_devices}.
 
