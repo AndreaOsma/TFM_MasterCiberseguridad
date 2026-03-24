@@ -409,9 +409,27 @@ La inclusión de estos ficheros no persigue únicamente exhaustividad, sino demo
 \end{itemize}
 
 \paragraph{Cobertura funcional del código incluido}
-Los listados completos de soporte (variables, salidas, inventario, \texttt{group\_vars} y playbooks auxiliares por nodo) se mantienen versionados en el repositorio para trazabilidad, pero no se reproducen íntegramente en memoria para evitar redundancia. En este documento se priorizan los artefactos con mayor valor demostrativo para la hipótesis: \texttt{code/terraform/main.tf}, \texttt{code/terraform/vault\_bootstrap.tf}, \texttt{code/ansible/playbooks/site.yml}, \texttt{code/ansible/playbooks/lxc\_vault.yml}, \texttt{artifacts/scripts/proxmox\_validation\_suite.sh} y \texttt{run\_demo.sh}.
+Los listados de Terraform (\texttt{variables.tf}, \texttt{main.tf}, \texttt{outputs.tf} y \texttt{vault\_bootstrap.tf}) cubren aprovisionamiento de cómputo, red, autenticación de proveedor y bootstrap de secretos dinámicos. Los listados de Ansible (\texttt{ansible.cfg}, inventario, \texttt{group\_vars} y playbooks por nodo) cubren instalación de dependencias, activación de servicios, configuración mínima de \gls{vault}/\gls{k3s}/PostgreSQL y etiquetado funcional del nodo para validación posterior.
+
+\lstinputlisting[language=bash, caption={Variables de entrada para Terraform}, label={lst:terraform-vars}]{code/terraform/variables.tf}
+
+\lstinputlisting[language=bash, caption={Outputs de Terraform para trazabilidad de recursos}, label={lst:terraform-outputs}]{code/terraform/outputs.tf}
 
 \lstinputlisting[language=bash, caption={Bootstrap de Vault y motor dinámico de base de datos en Terraform}, label={lst:terraform-vault-bootstrap}]{code/terraform/vault_bootstrap.tf}
+
+\lstinputlisting[language=bash, caption={Configuración global de Ansible}, label={lst:ansible-cfg}]{code/ansible/ansible.cfg}
+
+\lstinputlisting[language=bash, caption={Inventario del laboratorio en Ansible}, label={lst:ansible-inventory}]{code/ansible/inventories/lab/hosts.yml}
+
+\lstinputlisting[language=bash, caption={Variables compartidas de Ansible para todos los nodos}, label={lst:ansible-groupvars}]{code/ansible/group_vars/all.yml}
+
+\lstinputlisting[language=bash, caption={Playbook de configuración para nodo Gitea Runner}, label={lst:ansible-gitea}]{code/ansible/playbooks/lxc_gitea.yml}
+
+\lstinputlisting[language=bash, caption={Playbook de configuración para nodo PostgreSQL}, label={lst:ansible-postgres}]{code/ansible/playbooks/lxc_postgres.yml}
+
+\lstinputlisting[language=bash, caption={Playbook de configuración para nodo K3s}, label={lst:ansible-k3s}]{code/ansible/playbooks/vm_k3s.yml}
+
+\lstinputlisting[language=bash, caption={Script de generación de inventario Ansible a partir de outputs Terraform}, label={lst:ansible-inventory-render}]{code/ansible/scripts/render_inventory_from_tf.sh}
 
 \subsection*{Generación Dinámica de Credenciales en PostgreSQL}
 Tras la autenticación exitosa del pipeline de \gls{cicd} mediante \gls{oidc}, la carga de trabajo requiere acceso al motor de base de datos relacional ubicado en el \gls{lxc} 3. En lugar de inyectar una cadena de conexión estática, el runner realiza una petición a la API de \gls{vault}, configurado previamente con el motor de base de datos (Database Secrets Engine), interactúa de forma nativa con PostgreSQL para crear un rol de usuario efímero con permisos limitados (ej. \texttt{SELECT} sobre tablas específicas). Esta credencial se devuelve al runner en memoria. Una vez finalizado el \gls{ttl} estipulado, o al concluir la ejecución del trabajo, \gls{vault} ejecuta automáticamente una sentencia \texttt{DROP ROLE} en la base de datos, revocando el acceso y eliminando cualquier rastro de la credencial \parencite{vault_database_secrets_engine}.
