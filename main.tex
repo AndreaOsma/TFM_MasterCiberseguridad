@@ -10,6 +10,7 @@
 \usepackage{geometry}
 \usepackage{booktabs}
 \usepackage{array}
+\usepackage{float}
 \usepackage[automake=delayed]{glossaries}
 \usepackage[backend=biber,style=apa]{biblatex}
 \usepackage{csquotes}
@@ -418,7 +419,7 @@ Desde la estación de operación (macOS), se añadió un control de endurecimien
 \subsection{Matriz de verificación operativa (evidencia directa)}
 Con el objetivo de aportar trazabilidad verificable para la defensa, la Tabla \ref{tab:verificacion-operativa} resume las comprobaciones ejecutadas sobre el entorno real de Proxmox y su estado observado en el laboratorio.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \small
 \begin{tabular}{>{\raggedright\arraybackslash}p{0.27\textwidth} >{\raggedright\arraybackslash}p{0.33\textwidth} >{\raggedright\arraybackslash}p{0.34\textwidth}}
@@ -511,7 +512,7 @@ En esta ejecución, los indicadores derivados fueron consistentes con apoyo de h
 
 Para sintetizar la relación entre marco regulatorio, controles técnicos y evidencia experimental del trabajo, la Figura \ref{fig:matriz-trazabilidad} presenta la matriz de trazabilidad del TFM.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{diagrams/matriz_trazabilidad.png}
     \caption{Matriz de trazabilidad entre requisitos normativos (NIST SP 800-207, NIS2 y DORA), controles implementados en la arquitectura y evidencias documentadas en el TFM.}
@@ -526,7 +527,7 @@ Como limitación, el estudio se basa en un entorno de laboratorio on-premise con
 
 
 \subsection{Backlog priorizado de continuación}
-Para evitar ambiguedad en la continuidad del trabajo, se propone un backlog técnico con criterios de aceptación verificables:
+Para evitar ambigüedad en la continuidad del trabajo, se propone un backlog técnico con criterios de aceptación verificables:
 \begin{enumerate}
     \item \textbf{P1 -- Campaña estadística de estabilidad:} ejecutar corridas repetidas del flujo (mínimo 30) y reportar mediana, p95 y dispersión de \texttt{issue\_ms} y \texttt{revoke\_ms}. \textit{Aceptación:} reporte con métricas agregadas y tasa de éxito de aserciones A/B/C.
     \item \textbf{P2 -- Resiliencia ante fallos controlados:} introducir fallos transitorios (caída temporal de Vault, error de red hacia PostgreSQL, token inválido \gls{oidc}) y medir recuperación. \textit{Aceptación:} cada escenario debe finalizar con veredicto esperado (fallo controlado o recuperación) y evidencia en logs.
