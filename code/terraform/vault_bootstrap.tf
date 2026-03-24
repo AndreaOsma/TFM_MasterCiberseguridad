@@ -1,4 +1,5 @@
 locals {
+  # Vault necesita host sin máscara CIDR en la URL de conexión.
   postgres_host = split("/", var.lab_ipv4.postgres)[0]
 }
 
@@ -32,6 +33,7 @@ resource "vault_database_secret_backend_role" "readonly" {
   db_name = vault_database_secret_backend_connection.postgres[0].name
 
   creation_statements = [
+    # Rol efímero con caducidad, alineado con el TTL del lease.
     "CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';",
     "GRANT CONNECT ON DATABASE postgres TO \"{{name}}\";",
     "GRANT USAGE ON SCHEMA public TO \"{{name}}\";",
@@ -39,6 +41,7 @@ resource "vault_database_secret_backend_role" "readonly" {
   ]
 
   revocation_statements = [
+    # Revocación explícita para evitar residuos de permisos/roles.
     "REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM \"{{name}}\";",
     "REVOKE USAGE ON SCHEMA public FROM \"{{name}}\";",
     "REVOKE CONNECT ON DATABASE postgres FROM \"{{name}}\";",

@@ -14,9 +14,10 @@
         state: present
 
     - name: Install K3s server if missing
+      # Instalación pinneada por versión para evitar cambios de canal "stable".
       ansible.builtin.shell: |
         set -euo pipefail
-        curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL={{ k3s_install_channel }} sh -
+        curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL={{ k3s_install_channel }} INSTALL_K3S_VERSION={{ k3s_install_version }} sh -
       args:
         executable: /bin/bash
         creates: /usr/local/bin/k3s

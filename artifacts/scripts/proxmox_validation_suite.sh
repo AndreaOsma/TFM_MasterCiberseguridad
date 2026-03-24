@@ -62,6 +62,37 @@ VAULT_TOKEN="$deny_token" vault read database/creds/readonly-role >/tmp/val-deny
 deny_rc=$?
 set -e
 
+# Hypothesis-oriented assertions.
+ttl_within_expected_window="no"
+if [[ "$lease_ttl" -le 300 && "$lease_ttl" -gt 0 ]]; then
+  ttl_within_expected_window="yes"
+fi
+
+revocation_effective="no"
+if [[ $post_rc -ne 0 && "$role_exists" != "1" ]]; then
+  revocation_effective="yes"
+fi
+
+unauthorized_access_blocked="no"
+if [[ $deny_rc -ne 0 ]]; then
+  unauthorized_access_blocked="yes"
+fi
+
+hypothesis_h1_dynamic_secret_reduces_exposure="not_supported"
+if [[ "$ttl_within_expected_window" == "yes" && "$revocation_effective" == "yes" ]]; then
+  hypothesis_h1_dynamic_secret_reduces_exposure="supported"
+fi
+
+hypothesis_h2_policy_enforcement_blocks_misuse="not_supported"
+if [[ "$unauthorized_access_blocked" == "yes" ]]; then
+  hypothesis_h2_policy_enforcement_blocks_misuse="supported"
+fi
+
+hypothesis_overall="not_supported"
+if [[ "$hypothesis_h1_dynamic_secret_reduces_exposure" == "supported" && "$hypothesis_h2_policy_enforcement_blocks_misuse" == "supported" ]]; then
+  hypothesis_overall="supported"
+fi
+
 echo "issue_ms=$issue_ms"
 echo "revoke_ms=$revoke_ms"
 echo "lease_ttl_seconds=$lease_ttl"
@@ -82,4 +113,14 @@ if [[ $deny_rc -ne 0 ]]; then
   echo "unauthorized_token_access=denied_expected"
 else
   echo "unauthorized_token_access=unexpected_allowed"
+fi
+echo "ttl_within_expected_window=$ttl_within_expected_window"
+echo "revocation_effective=$revocation_effective"
+echo "unauthorized_access_blocked=$unauthorized_access_blocked"
+echo "hypothesis_h1_dynamic_secret_reduces_exposure=$hypothesis_h1_dynamic_secret_reduces_exposure"
+echo "hypothesis_h2_policy_enforcement_blocks_misuse=$hypothesis_h2_policy_enforcement_blocks_misuse"
+echo "hypothesis_overall=$hypothesis_overall"
+
+if [[ "$hypothesis_overall" != "supported" ]]; then
+  exit 2
 fi

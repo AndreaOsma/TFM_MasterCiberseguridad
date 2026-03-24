@@ -7,6 +7,7 @@ from diagrams.onprem.iac import Terraform
 from diagrams.k8s.compute import Pod
 
 graph_attr = {
+    # Estilo global para legibilidad en memoria y diapositivas.
     "fontsize": "20",
     "fontname": "Helvetica-Bold",
     "pad": "0.55",
@@ -20,6 +21,7 @@ graph_attr = {
 }
 
 node_attr = {
+    # Nodos neutros para destacar los flujos por color de arista.
     "fontsize": "12",
     "fontname": "Helvetica",
     "shape": "box",
@@ -29,6 +31,7 @@ node_attr = {
 }
 
 edge_attr = {
+    # Tipografía compacta para etiquetas de flujo.
     "fontsize": "10",
     "fontname": "Helvetica",
     "color": "#5F6368",
@@ -37,6 +40,7 @@ edge_attr = {
 with Diagram(
     "Arquitectura del laboratorio y flujo de credenciales dinámicas",
     filename="diagrams/topologia",
+    outformat=["png", "svg"],
     show=False,
     direction="LR",
     graph_attr=graph_attr,
@@ -67,10 +71,13 @@ with Diagram(
 
     tf >> Edge(label="0. Aplica Políticas y Roles (HCL)", color="#555555", style="dashed") >> vault
 
+    # Flujo de identidad (azul): autenticación de workloads.
     gitea >> Edge(label="1. Auth OIDC (Token JWT)", color="#1A73E8", penwidth="2.0") >> vault
     workload >> Edge(label="1b. Auth Service Account", color="#1A73E8", style="dotted") >> vault
 
+    # Flujo de secretos (verde): emisión de credencial efímera.
     vault >> Edge(label="2. Crea Rol Temporal (TTL)", color="#0F9D58", penwidth="2.0") >> db
     vault >> Edge(label="3. Devuelve Credencial a Memoria", color="#0F9D58", style="dashed") >> gitea
 
+    # Flujo de uso de datos (rojo): acceso temporal con credencial emitida.
     gitea >> Edge(label="4. Acceso Efímero (PostgreSQL)", color="#D93025", penwidth="2.0") >> db

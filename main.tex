@@ -9,6 +9,7 @@
 \usepackage{listings}
 \usepackage{geometry}
 \usepackage{booktabs}
+\usepackage{array}
 \usepackage[automake=delayed]{glossaries}
 \usepackage[backend=biber,style=apa]{biblatex}
 \usepackage{csquotes}
@@ -36,6 +37,8 @@
     basicstyle=\ttfamily\footnotesize,
     breaklines=true,
     breakatwhitespace=true,
+    columns=fullflexible,
+    keepspaces=true,
     frame=lines,
     captionpos=b,
     keywordstyle=\color{blue},
@@ -177,7 +180,7 @@
 
 \begin{document}
 
-\title{MÁSTER EN CIBERSEGURIDAD \\ \vspace{0.5cm} \large MÓDULO 11. TRABAJO FIN DE MÁSTER (TFM)}
+\title{\texorpdfstring{MÁSTER EN CIBERSEGURIDAD \\ \vspace{0.5cm} \large MÓDULO 11. TRABAJO FIN DE MÁSTER (TFM)}{MÁSTER EN CIBERSEGURIDAD - MÓDULO 11. TRABAJO FIN DE MÁSTER (TFM)}}
 \subtitle{La Crisis de la Gestión de Secretos: Secret Sprawl}
 
 \author{Andrea Osma Rafael}
@@ -273,7 +276,7 @@ La exportación de estos registros estructurados hacia un sistema \gls{siem} cen
 
 La transición de arquitecturas monolíticas a ecosistemas distribuidos, contenerizados y orientados a microservicios ha redefinido radicalmente el perímetro de seguridad clásico. En este paradigma actual, la red subyacente se asume como un entorno intrínsecamente hostil, desplazando a la identidad hacia el centro del plano de control. Este avance arquitectónico, si bien ha dotado de agilidad al desarrollo, ha precipitado una crisis operativa sin precedentes: la proliferación descontrolada de identidades no humanas, tales como servicios, contenedores y automatizaciones de despliegue. A diferencia de los usuarios humanos, estas entidades requieren mecanismos de autenticación criptográfica automatizados y de alta frecuencia, lo que ha derivado en el fenómeno conocido como \gls{secretsprawl} (dispersión de secretos) a lo largo del ciclo de vida del desarrollo de software (\gls{sdlc}).
 
-En paralelo, la consolidación de las metodologías ágiles ha convertido a los repositorios de código y a las plataformas de Integración y Despliegue Continuo (\gls{cicd}) en la columna vertebral de la ingeniería de software y, consecuentemente, en vectores de ataque de alto valor. La persistencia técnica de incrustar credenciales estáticas (hardcoding) o de utilizar variables de entorno debilmente protegidas expone a las infraestructuras a riesgos severos, facilitando el movimiento lateral y el compromiso de la cadena de suministro. Este escenario se vuelve críticamente complejo en sectores sometidos a estrictas normativas (como defensa, banca o infraestructuras críticas), donde la soberanía del dato exige despliegues en nubes privadas (on-premise) fuertemente aisladas. Históricamente, la innovación en la inyección dinámica de credenciales se ha diseñado de forma nativa para la nube pública, dejando a las infraestructuras locales relegadas a prácticas heredadas y a un control perimetral obsoleto.
+En paralelo, la consolidación de las metodologías ágiles ha convertido a los repositorios de código y a las plataformas de Integración y Despliegue Continuo (\gls{cicd}) en la columna vertebral de la ingeniería de software y, consecuentemente, en vectores de ataque de alto valor. La persistencia técnica de incrustar credenciales estáticas (hardcoding) o de utilizar variables de entorno débilmente protegidas expone a las infraestructuras a riesgos severos, facilitando el movimiento lateral y el compromiso de la cadena de suministro. Este escenario se vuelve críticamente complejo en sectores sometidos a estrictas normativas (como defensa, banca o infraestructuras críticas), donde la soberanía del dato exige despliegues en nubes privadas (on-premise) fuertemente aisladas. Históricamente, la innovación en la inyección dinámica de credenciales se ha diseñado de forma nativa para la nube pública, dejando a las infraestructuras locales relegadas a prácticas heredadas y a un control perimetral obsoleto.
 
 La gestión manual de material criptográfico, como la rotación de contraseñas o la renovación de certificados X.509, no solo introduce una carga operativa severa para los equipos de ingeniería, sino que también incrementa la probabilidad de interrupciones del servicio debido a errores humanos u omisiones.
 
@@ -285,7 +288,9 @@ La presente investigación plantea que la integración de una arquitectura de se
 
 Asimismo, se hipotetiza que la inserción de controles de seguridad de forma transversal (\gls{sast}, \gls{dast} y análisis de composición de software) directamente en el pipeline de Integración y Despliegue Continuo (\gls{cicd}) madura la postura de seguridad del ciclo de vida del software. Retirar el material criptográfico persistente del código fuente y de los repositorios de control de versiones mitiga el riesgo de \gls{secretsprawl} y dificulta el movimiento lateral o la escalada de privilegios en caso de una intrusión inicial.
 
-Finalmente, desde el punto de vista de la ingeniería de la infraestructura, se postula que la orquestación de este ecosistema mediante paradigmas de Infraestructura como Código (\gls{iac}) desvinculando la capa de gestión de acceso de la topología de red subyacente proporciona la abstracción necesaria para escalar el modelo operativo. El uso de manifiestos declarativos y automatización modular facilita la exportación de esta misma arquitectura desde un entorno on-premise virtualizado hacia un modelo de nube híbrida pública, manteniendo la cohesión y las políticas de seguridad inmutables sin requerir una reingeniería profunda de la lógica de acceso.
+Finalmente, desde el punto de vista de la ingeniería de la infraestructura, se postula que la orquestación de este ecosistema mediante paradigmas de Infraestructura como Código (\gls{iac}), al desvincular la capa de gestión de acceso de la topología de red subyacente, proporciona la abstracción necesaria para escalar el modelo operativo. El uso de manifiestos declarativos y automatización modular facilita la exportación de esta misma arquitectura desde un entorno on-premise virtualizado hacia un modelo de nube híbrida pública, manteniendo la cohesión y las políticas de seguridad inmutables sin requerir una reingeniería profunda de la lógica de acceso.
+
+Para hacer esta hipótesis falsable en el laboratorio, se adoptan tres criterios de verificación: (1) que la credencial emitida sea temporal y quede acotada por \gls{ttl}; (2) que la revocación elimine el acceso y el rol efímero en el sistema objetivo; y (3) que una identidad sin política suficiente reciba denegación de acceso. El trabajo experimental se considera consistente con la hipótesis únicamente cuando estos tres criterios se observan de forma simultánea en ejecución real.
 
 
 \section{Tesis: Arquitectura DevSecOps para la Gestión Dinámica de Secretos}
@@ -293,7 +298,7 @@ Finalmente, desde el punto de vista de la ingeniería de la infraestructura, se 
 La propuesta central de este proyecto consiste en el diseño e implementación de una arquitectura centralizada de gestión de secretos, fundamentada en el paradigma \gls{zerotrust}. El objetivo principal es la sustitución de credenciales estáticas por flujos de inyección dinámica, orquestados íntegramente mediante Infraestructura como Código (\gls{iac}).
 
 \subsection{Diseño de la Arquitectura Lógica}
-El núcleo del sistema reside en una bóveda criptográfica de alta disponibilidad (como HashiCorp \gls{vault}), configurada para operar como la única fuente de verdad para el material sensible. La arquitectura se segmenta en tres planos funcionales:
+El núcleo del sistema reside en una bóveda criptográfica centralizada (como HashiCorp \gls{vault}), configurada para operar como la única fuente de verdad para el material sensible. En este TFM, la implementación experimental se ha realizado en modo de nodo único con almacenamiento \gls{raft}; por tanto, la alta disponibilidad multi-nodo queda fuera de alcance en este laboratorio. La arquitectura se segmenta en tres planos funcionales:
 
 \begin{itemize}
     \item \textbf{Plano de Autenticación:} Las cargas de trabajo (contenedores, pipelines de despliegue) no poseen secretos iniciales estáticos en disco. Se autentican contra la bóveda utilizando identidades nativas de su entorno de ejecución, tales como tokens \gls{jwt} en entornos de \gls{cicd} mediante \gls{oidc} (OpenID Connect) o Service Accounts en orquestadores \parencite{rfc7519_jwt,oidc_core_1_0}.
@@ -323,10 +328,12 @@ Fomentando una operativa técnica de alto rendimiento y reduciendo la fricción 
 \subsection{Entorno de Pruebas}
 Para la validación empírica de la arquitectura propuesta, se ha desplegado un laboratorio \textit{on-premise} sobre un hipervisor tipo 1 (Proxmox VE 8.4.17). La infraestructura de hardware asignada consta de 48 GB de memoria RAM, un disco de estado sólido (SSD) de 256 GB para el almacenamiento operativo de alta velocidad gestionado mediante aprovisionamiento fino (\textit{thin provisioning}), y un disco duro mecánico (HDD) de 1 TB destinado a volcados de seguridad periódicos (\texttt{vzdump}).
 
+En este TFM, el laboratorio no se utiliza como entorno de demostración visual, sino como instrumento experimental para contrastar la hipótesis bajo condiciones controladas y reproducibles. Por ello, cada resultado reportado se vincula a una prueba ejecutable, a un artefacto técnico y a un criterio explícito de aceptación o rechazo.
+
 La topología de red y computación se segmenta utilizando una combinación de contenedores Linux (\gls{lxc}) para servicios base y Máquinas Virtuales (VM) para la orquestación, distribuidos de la siguiente manera:
 
 \begin{itemize}
-    \item \textbf{\gls{lxc} 1 (Gitea v1.21 + Act Runner):} Plataforma ligera para el control de versiones y la ejecución de pipelines de \gls{cicd}, configurada para emitir tokens \gls{oidc}.
+    \item \textbf{\gls{lxc} 1 (Gitea v1.22.6 + Act Runner):} Plataforma ligera para el control de versiones y la ejecución de pipelines de \gls{cicd}, configurada para emitir tokens \gls{oidc}.
     \item \textbf{\gls{lxc} 2 (HashiCorp \gls{vault} v1.17.5):} Bóveda criptográfica central con motor de almacenamiento integrado (\gls{raft}) en configuración de nodo único.
     \item \textbf{\gls{lxc} 3 (PostgreSQL v17):} Motor de base de datos relacional que actúa como sistema objetivo para la inyección dinámica de credenciales.
     \item \textbf{VM 1 (\gls{k3s}, canal \textit{stable}; validado en v1.34.5+k3s1):} Clúster de \gls{kubernetes} ligero sobre una distribución Debian minimalista. El uso de una máquina virtual proporciona aislamiento a nivel de kernel, lo cual mitiga vectores de escape de contenedores \parencite{kubernetes_overview,k3s_documentation}.
@@ -432,21 +439,23 @@ En la configuración de Terraform se detalla la lógica declarativa para aprovis
 Al aplicar este manifiesto, la lógica de creación de usuarios queda versionada e inmutable. El comportamiento esperado es que, ante cualquier intento de acceso lateral, la caducidad inherente del usuario (300 segundos) mitigue de forma severa la ventana de exposición del dato.
 
 \subsection{Metodología de evaluación}
-La validación de la arquitectura se basa en criterios funcionales y en evidencia observables en el laboratorio. En concreto, se considera que el diseño funciona si se cumple lo siguiente: (1) la emisión de credenciales para acceso a base de datos es efímera y conduce a la revocación del rol mediante la operación \texttt{DROP ROLE}; (2) la trazabilidad de accesos se materializa en eventos de auditoría en formato JSON generados por \gls{vault}; y (3) la configuración del entorno y de las políticas se puede reproducir a partir de manifiestos declarativos versionados con Terraform \parencite{vault_database_secrets_engine,vault_audit_devices,terraform_documentation}.
+La validación de la arquitectura se basa en criterios funcionales y en evidencias observables en el laboratorio. En concreto, se considera que el diseño funciona si se cumple lo siguiente: (1) la emisión de credenciales para acceso a base de datos es efímera y conduce a la revocación del rol mediante la operación \texttt{DROP ROLE}; (2) la trazabilidad de accesos se materializa en eventos de auditoría en formato JSON generados por \gls{vault}; y (3) la configuración del entorno y de las políticas se puede reproducir a partir de manifiestos declarativos versionados con Terraform \parencite{vault_database_secrets_engine,vault_audit_devices,terraform_documentation}. En esta instalación, el endpoint de Proxmox (\texttt{https://proxmox:8006/}) se resuelve por DNS de Tailscale, lo que condiciona la conectividad de administración remota al plano de red superpuesto.
 
 Las fuentes de evidencia utilizadas incluyen la topología del laboratorio (Figura \ref{fig:topologia}), la automatización del host (Listado \ref{lst:setup}), la lógica de aprovisionamiento declarativo (Listado \ref{lst:terraform-main}) y la orquestación de configuración por Ansible (Listados \ref{lst:ansible-site} y \ref{lst:ansible-vault}). Como control de reproducibilidad del código de infraestructura, se incorpora además la validación sintáctica y semántica de manifiestos mediante \texttt{terraform validate}, junto con la separación explícita de parámetros sensibles de autenticación de la API de Proxmox respecto al código versionado.
 
-Como verificación operativa complementaria, se ejecutaron pruebas no destructivas por \texttt{SSH} sobre el host Proxmox del laboratorio para confirmar identidad de ejecución y estado base de plataforma (\texttt{hostname}, \texttt{id}, \texttt{pve-manager}). Este paso permite acotar el riesgo previo a cualquier \textit{apply}, al validar que el contexto remoto y los permisos de operador son los esperados antes de introducir cambios de estado.
+Como verificación operativa complementaria, se ejecutaron pruebas no destructivas por \texttt{SSH} sobre el host Proxmox del laboratorio para confirmar identidad de ejecución y estado base de plataforma (\texttt{hostname}, \texttt{id}, \texttt{pve-manager}). Para reforzar el principio de mínimo privilegio, estas comprobaciones se realizaron con un usuario técnico dedicado (\texttt{tfm-test}) y uso explícito de \texttt{sudo -n} únicamente sobre comandos de observación del laboratorio. Adicionalmente, en la VM 504 se validó la rotación de clave \texttt{SSH} hacia una credencial temporal renovada, comprobando tanto el acceso efectivo al sistema como la persistencia de la clave en la configuración \textit{cloud-init} (\texttt{qm config 504}). Este paso permite acotar el riesgo previo a cualquier \textit{apply}, al validar que el contexto remoto y los permisos de operador son los esperados antes de introducir cambios de estado.
+
+Desde la estación de operación (macOS), se añadió un control de endurecimiento sobre la identidad del operador: la clave privada \texttt{SSH} se gestiona mediante \textit{Keychain} y \texttt{ssh-agent}, con desbloqueo local protegido por biometría (Touch ID) en el flujo de acceso al llavero. Este enfoque evita incrustar claves o passphrases en scripts, reduce exposición de secretos en terminal y refuerza la trazabilidad del acceso administrativo sin alterar el principio de automatización reproducible del laboratorio.
 
 \section{Resultados}
 
 \subsection{Matriz de verificación operativa (evidencia directa)}
-Con el objetivo de aportar trazabilidad verificable para la defensa, la Tabla \ref{tab:verificacion-operativa} resume las comprobaciones ejecutadas sobre el entorno real de Proxmox y su estado observado en esta iteración.
+Con el objetivo de aportar trazabilidad verificable para la defensa, la Tabla \ref{tab:verificacion-operativa} resume las comprobaciones ejecutadas sobre el entorno real de Proxmox y su estado observado en el laboratorio.
 
 \begin{table}[htbp]
 \centering
 \small
-\begin{tabular}{p{0.27\textwidth} p{0.33\textwidth} p{0.34\textwidth}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.27\textwidth} >{\raggedright\arraybackslash}p{0.33\textwidth} >{\raggedright\arraybackslash}p{0.34\textwidth}}
 \toprule
 \textbf{Objetivo evaluado} & \textbf{Prueba ejecutada} & \textbf{Resultado observado} \\
 \midrule
@@ -473,6 +482,10 @@ Inicialización y desellado controlado mediante \texttt{vault operator init/unse
 Estado operacional del clúster \gls{k3s} (VM 504) &
 Comprobación de red, \texttt{SSH}, \texttt{qemu-guest-agent}, servicio \texttt{k3s} y \texttt{kubectl get nodes -o wide} &
 Nodo \texttt{k3s-cluster} accesible y en estado \texttt{Ready}; servicios \texttt{ssh}, \texttt{qemu-guest-agent} y \texttt{k3s} activos en la VM de orquestación. \\
+\addlinespace
+Protección de identidad del operador (acceso remoto) &
+Validación de acceso por \texttt{SSH} desde macOS con clave privada en \textit{Keychain} + \texttt{ssh-agent}, desbloqueo local por biometría (Touch ID) y ejecución con usuario \texttt{tfm-test} &
+Operativa sin exposición de clave privada ni passphrase en scripts; autenticación de operador reforzada para administración del laboratorio con principio de mínimo privilegio. \\
 \bottomrule
 \end{tabular}
 \caption{Matriz de verificación operativa del laboratorio: objetivo, prueba ejecutada y resultado observado.}
@@ -497,19 +510,27 @@ El entorno que soporta esta secuencia está descrito en la Figura \ref{fig:topol
 La segunda dimensión evaluada es la trazabilidad. El motor de auditoría de \gls{vault} registra cada interacción en formato JSON con campos consistentes (identidad solicitante, política evaluada, ruta del secreto y timestamp). Esta evidencia se alinea con la arquitectura del laboratorio descrita en la Figura \ref{fig:topologia} y facilita la correlación de eventos hacia un sistema de monitorización tipo \gls{siem}, habilitando la detección de anomalías asociadas a intentos fallidos o patrones de acceso no esperados \parencite{vault_audit_devices,nist_sp800_207}.
 
 \subsection{Reproducibilidad del despliegue mediante IaC}
-La reproducibilidad del despliegue se valida verificando que el laboratorio on-premise se construye desde código versionado y declarativo. El aprovisionamiento del host se automatiza mediante el script del Listado \ref{lst:setup}, mientras que la configuración de políticas, motores y roles se define a través de manifiestos Terraform (Listado \ref{lst:terraform-main}). Sobre esta base, la configuración específica de cada nodo (Gitea Runner, Vault, PostgreSQL y K3s) se orquesta mediante playbooks Ansible idempotentes (Listados \ref{lst:ansible-site} y \ref{lst:ansible-vault}), separados por rol técnico y reutilizables en nuevas iteraciones del laboratorio. Este enfoque reduce la deriva operativa entre ejecuciones y refuerza la hipótesis de una implementación inmutable y auditable en el \gls{sdlc} \parencite{terraform_documentation}.
+La reproducibilidad del despliegue se valida verificando que el laboratorio on-premise se construye desde código versionado y declarativo. El aprovisionamiento del host se automatiza mediante el script del Listado \ref{lst:setup}, mientras que la configuración de políticas, motores y roles se define a través de manifiestos Terraform (Listado \ref{lst:terraform-main}). Sobre esta base, la configuración específica de cada nodo (Gitea Runner, Vault, PostgreSQL y K3s) se orquesta mediante playbooks Ansible idempotentes (Listados \ref{lst:ansible-site} y \ref{lst:ansible-vault}), separados por rol técnico y reutilizables en nuevas ejecuciones del laboratorio. Este enfoque reduce la deriva operativa entre ejecuciones y refuerza la hipótesis de una implementación inmutable y auditable en el \gls{sdlc} \parencite{terraform_documentation}.
 
-En la validación experimental de esta iteración se observó:
+En la validación experimental se observó:
 \begin{enumerate}
     \item \texttt{terraform validate} finaliza con éxito tras ajustar la validación de entrada de clave pública.
     \item El aprovisionamiento controlado en Proxmox genera y arranca los nodos reservados del laboratorio (IDs 501--504) con la asignación funcional esperada (Gitea Runner, Vault, PostgreSQL y K3s).
     \item La conectividad de automatización con Ansible es correcta cuando se ejecuta desde el propio host Proxmox hacia los nodos internos (respuesta \texttt{pong} en contenedores y acceso \texttt{SSH} operativo en la VM \gls{k3s}).
     \item La convergencia de servicios queda validada con evidencias de ejecución (\texttt{systemctl is-active}, versiones de binario y puertos en escucha) en Gitea, Vault y PostgreSQL, incluyendo inicialización y desellado operativo de Vault con respuesta de salud HTTP 200.
-    \item El clúster \gls{k3s} queda funcional en la VM 504, con nodo \texttt{Ready} validado mediante \texttt{kubectl get nodes -o wide}.
+    \item El clúster \gls{k3s} queda funcional en la VM 504, con nodo \texttt{Ready} validado mediante \texttt{kubectl get nodes -o wide} tras verificar acceso \texttt{SSH} con la clave rotada y persistencia en \texttt{cloud-init}.
 \end{enumerate}
 
-\subsection{Pruebas complementarias con métricas y casos negativos}
-Para reforzar la validez experimental, se ejecutó una batería adicional automatizada sobre Proxmox (artefacto: \texttt{artifacts/validation/proxmox\_validation\_results.txt}) con resultados cuantitativos y de control de acceso:
+\subsection{Pruebas complementarias con métricas, casos negativos y criterio de hipótesis}
+Para reforzar la validez experimental, se ejecutó una batería adicional automatizada sobre Proxmox (artefacto: \texttt{artifacts/validation/proxmox\_validation\_results.txt}) orientada explícitamente a validar hipótesis y no solo disponibilidad de servicios. La prueba se diseña con tres aserciones técnicas:
+\begin{enumerate}
+    \item \textbf{Reducción de ventana de exposición:} el \gls{ttl} de la credencial dinámica debe quedar acotado y, tras revocación, la credencial no debe reutilizarse.
+    \item \textbf{Revocación efectiva:} además del fallo de autenticación post-revocación, el rol efímero debe desaparecer de \texttt{pg\_roles}.
+    \item \textbf{Bloqueo de abuso por política:} un token sin permisos sobre \texttt{database/creds/readonly-role} debe ser denegado.
+\end{enumerate}
+A partir de estas aserciones, el propio script calcula un veredicto por hipótesis (\texttt{supported/not\_supported}) y un veredicto global (\texttt{hypothesis\_overall}).
+\par
+Los resultados observados fueron:
 \begin{itemize}
     \item \textbf{Tiempo de emisión de credencial dinámica:} \texttt{issue\_ms=107} ms.
     \item \textbf{Tiempo de revocación síncrona:} \texttt{revoke\_ms=103} ms.
@@ -518,7 +539,7 @@ Para reforzar la validez experimental, se ejecutó una batería adicional automa
     \item \textbf{Prueba negativa de revocación:} tras revocar, la credencial deja de operar (\texttt{post\_revoke\_query=failed\_expected}) y el rol efímero se elimina del catálogo (\texttt{post\_revoke\_role\_exists=no}).
     \item \textbf{Prueba negativa de autorización:} un token sin política de lectura a \texttt{database/creds/readonly-role} recibe denegación (\texttt{unauthorized\_token\_access=denied\_expected}).
 \end{itemize}
-Estos resultados incrementan el nivel de evidencia más allá de la validación funcional cualitativa, al demostrar comportamiento temporal y de control de acceso con medidas observables en ejecución real.
+En esta ejecución, los indicadores derivados fueron consistentes con apoyo de hipótesis (\texttt{ttl\_within\_expected\_window=yes}, \texttt{revocation\_effective=yes}, \texttt{unauthorized\_access\_blocked=yes}, \texttt{hypothesis\_overall=supported}). Estos resultados incrementan el nivel de evidencia más allá de la validación funcional cualitativa, al demostrar comportamiento temporal y de control de acceso con criterios verificables en ejecución real.
 
 \section{Discusión}
 
@@ -535,7 +556,7 @@ Para sintetizar la relación entre marco regulatorio, controles técnicos y evid
 Los resultados observados en el laboratorio respaldan la hipótesis principal: la sustitución de credenciales estáticas por emisión dinámica reduce el tiempo durante el cual una credencial podría reutilizarse tras una potencial exposición, mitigando \gls{secretsprawl}. Además, la trazabilidad habilitada en \gls{vault} y la arquitectura orientada a prevención son coherentes con buenas prácticas de secret management y secret scanning \parencite{owasp_secrets_management_cheat_sheet,github_secret_scanning,vault_audit_devices}.
 
 \subsection{Amenazas a la validez y limitaciones}
-Como limitación, el estudio se basa en un entorno de laboratorio on-premise con componentes específicos (Proxmox, \gls{lxc}, \gls{k3s}, \gls{vault} y PostgreSQL). La validez externa queda condicionada por la replicabilidad de la configuración y por la calidad de las políticas implementadas. Además, la medición cuantitativa (p. ej., latencias, distribución estadística de tiempos de emisión/revocación o tasa de falsos positivos en detección) no se detalla en esta versión del TFM, por lo que la evaluación se centra en evidencia funcional y trazabilidad operacional.
+Como limitación, el estudio se basa en un entorno de laboratorio on-premise con componentes específicos (Proxmox, \gls{lxc}, \gls{k3s}, \gls{vault} y PostgreSQL). La validez externa queda condicionada por la replicabilidad de la configuración y por la calidad de las políticas implementadas. Aunque esta versión sí incorpora métricas puntuales de emisión y revocación de credenciales (ms) y comprobaciones negativas de autorización, no se incluye todavía una campaña estadística extensa (múltiples corridas, percentiles y dispersión) ni una batería sistemática de resiliencia ante fallos transitorios, por lo que la evaluación mantiene un foco principalmente funcional y de trazabilidad operacional.
 
 
 \subsection{Trabajo futuro}

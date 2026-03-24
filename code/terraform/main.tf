@@ -12,6 +12,7 @@ terraform {
 }
 
 provider "proxmox" {
+  # Credenciales fuera de código: se pasan por tfvars/variables de entorno.
   endpoint = var.proxmox_endpoint
   username = var.proxmox_username
   password = var.proxmox_password
@@ -19,6 +20,7 @@ provider "proxmox" {
 }
 
 provider "vault" {
+  # Se usa para bootstrap opcional del motor de secretos dinámicos.
   address = var.vault_address
   token   = var.vault_token
 }
@@ -31,6 +33,7 @@ resource "proxmox_virtual_environment_container" "lxc_gitea" {
   vm_id     = var.vm_ids.gitea
 
   initialization {
+    # Inyección temprana de clave SSH para evitar acceso por contraseña.
     hostname = "gitea-runner"
     ip_config {
       ipv4 {
@@ -154,6 +157,7 @@ resource "proxmox_virtual_environment_vm" "vm_k3s" {
   }
 
   initialization {
+    # VM con usuario no-root para alinear con buenas prácticas de acceso.
     ip_config {
       ipv4 {
         address = var.lab_ipv4.k3s

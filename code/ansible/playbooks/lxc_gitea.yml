@@ -35,14 +35,34 @@
         - { path: /etc/gitea, owner: gitea, group: gitea, mode: "0770" }
 
     - name: Install Gitea binary
+      # Binario pinneado por versión para mantener reproducibilidad.
+      ansible.builtin.get_url:
+        url: "https://dl.gitea.com/gitea/{{ gitea_version }}/gitea-{{ gitea_version }}-linux-amd64"
+        dest: /usr/local/bin/gitea
+        validate_certs: "{{ gitea_download_validate_certs }}"
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Generate per-node Gitea secret key if missing
+      # Clave local persistente para evitar secretos hardcodeados en repositorio.
       ansible.builtin.shell: |
         set -euo pipefail
-        curl -fsSL "https://dl.gitea.com/gitea/1.22.6/gitea-1.22.6-linux-amd64" -o /usr/local/bin/gitea
-        chmod 0755 /usr/local/bin/gitea
+        if [ ! -s /etc/gitea/secret_key ]; then
+          umask 0077
+          tr -dc 'A-Za-z0-9' </dev/urandom | head -c 64 >/etc/gitea/secret_key
+        fi
       args:
-        creates: /usr/local/bin/gitea
+        executable: /bin/bash
+
+    - name: Read Gitea secret key
+      ansible.builtin.command: cat /etc/gitea/secret_key
+      register: gitea_secret_key_cmd
+      changed_when: false
+      no_log: true
 
     - name: Create basic Gitea app configuration
+      # Se inserta la clave leída en runtime; no se imprime por no_log.
       ansible.builtin.copy:
         dest: /etc/gitea/app.ini
         owner: gitea
@@ -61,7 +81,7 @@
           PATH = /var/lib/gitea/data/gitea.db
           [security]
           INSTALL_LOCK = true
-          SECRET_KEY = tfm-lab-secret-key
+          SECRET_KEY = {{ gitea_secret_key_cmd.stdout }}
 
     - name: Install Gitea systemd unit
       ansible.builtin.copy:

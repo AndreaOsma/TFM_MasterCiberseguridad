@@ -3,7 +3,7 @@ set -euo pipefail
 
 TF_DIR="${1:-../terraform}"
 OUT_FILE="${2:-inventories/lab/hosts.yml}"
-SSH_KEY="${3:-~/.ssh/tfm_proxmox_temp}"
+SSH_KEY="${3:-~/.ssh/tfm_proxmox_temp_2026}"
 
 cd "$(dirname "$0")/.."
 

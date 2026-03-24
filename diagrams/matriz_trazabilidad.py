@@ -2,6 +2,7 @@ from diagrams import Diagram, Cluster, Edge
 from diagrams.onprem.compute import Server
 
 graph_attr = {
+    # Estilo homogéneo con el resto de diagramas del TFM.
     "fontsize": "20",
     "fontname": "Helvetica-Bold",
     "pad": "0.5",
@@ -15,6 +16,7 @@ graph_attr = {
 }
 
 node_attr = {
+    # Tamaño de nodo algo menor para acomodar más texto por bloque.
     "fontsize": "10.5",
     "fontname": "Helvetica",
     "shape": "box",
@@ -24,6 +26,7 @@ node_attr = {
 }
 
 edge_attr = {
+    # Etiquetas breves para no saturar la matriz.
     "fontsize": "9.5",
     "fontname": "Helvetica",
     "color": "#5F6368",
@@ -32,6 +35,7 @@ edge_attr = {
 with Diagram(
     "Matriz de trazabilidad normativa, técnica y evidencial",
     filename="diagrams/matriz_trazabilidad",
+    outformat=["png", "svg"],
     show=False,
     direction="LR",
     graph_attr=graph_attr,
@@ -64,6 +68,7 @@ with Diagram(
         ev_listings = Server("Listados Terraform/Setup\n(lst:terraform-main, lst:setup)")
         ev_results = Server("Resultados y Discusión\n(Secciones 6 y 7)")
 
+    # Mapeo norma -> control técnico implementado.
     req_zt >> Edge(label="Autenticación continua", color="#1A73E8", penwidth="1.8") >> ctrl_oidc
     req_zt >> Edge(label="Menor exposición", color="#1A73E8", penwidth="1.8") >> ctrl_ttl
 
@@ -73,6 +78,7 @@ with Diagram(
     req_dora >> Edge(label="Resiliencia operativa", color="#1A73E8", penwidth="1.8") >> ctrl_iac
     req_dora >> Edge(label="Trazas auditables", color="#1A73E8", penwidth="1.8") >> ctrl_audit
 
+    # Mapeo control -> evidencia concreta dentro de la memoria.
     ctrl_oidc >> Edge(label="Evidencia en flujo", color="#0F9D58", penwidth="1.8") >> ev_flow
     ctrl_ttl >> Edge(label="Evidencia en resultados", color="#0F9D58", penwidth="1.8") >> ev_results
     ctrl_audit >> Edge(label="Evidencia en topología/resultados", color="#0F9D58", penwidth="1.8") >> ev_topo

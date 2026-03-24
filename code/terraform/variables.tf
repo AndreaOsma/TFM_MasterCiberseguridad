@@ -47,6 +47,7 @@ variable "lxc_template_id" {
 
 variable "vm_ids" {
   description = "IDs de recursos en Proxmox para el laboratorio."
+  # Se fijan para simplificar trazabilidad en pruebas y documentación.
   type = object({
     gitea    = number
     vault    = number
@@ -63,6 +64,7 @@ variable "vm_ids" {
 
 variable "lab_ipv4" {
   description = "Direccionamiento IPv4 del laboratorio (con CIDR)."
+  # Segmento interno del laboratorio; el acceso remoto se hace por Tailscale.
   type = object({
     gitea    = string
     vault    = string
@@ -82,6 +84,7 @@ variable "lab_ipv4" {
 variable "enable_vault_bootstrap" {
   type        = bool
   description = "Habilita la configuracion de Vault (policy + database secrets engine) desde Terraform."
+  # Permite separar el alta de infraestructura del bootstrap de seguridad.
   default     = false
 }
 

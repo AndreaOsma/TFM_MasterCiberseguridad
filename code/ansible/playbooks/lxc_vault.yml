@@ -41,6 +41,7 @@
         mode: "0750"
 
     - name: Configure Vault server
+      # Configuración mínima para laboratorio: listener TCP sin TLS interno.
       ansible.builtin.copy:
         dest: /etc/vault.d/vault.hcl
         owner: vault
@@ -70,6 +71,7 @@
         mode: "0750"
 
     - name: Install container-compatible Vault systemd unit
+      # Unit file adaptado a LXC (evita conflictos con namespaces del paquete).
       ansible.builtin.copy:
         dest: /etc/systemd/system/vault.service
         mode: "0644"
