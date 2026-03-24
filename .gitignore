@@ -6,9 +6,11 @@ Thumbs.db
 # === Documentación derivada ===
 presentacion_tfm_marp.html
 Presentación.md
+docs/
 docs/requirements/Presentación.md
 docs/requirements/Presentación.md
 docs/presentation/
+artifacts/presentation/
 presentacion_tfm_marp.md
 presentacion_tfm_marp.pdf
 docs/blog/entrada_blog_tfm.md
