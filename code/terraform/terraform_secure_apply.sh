@@ -38,7 +38,7 @@ for arg in "$@"; do
 done
 
 if [[ -z "${PROXMOX_USERNAME:-}" ]]; then
-  read -r -p "PROXMOX username (ej: tfm-test@pve): " PROXMOX_USERNAME
+  read -r -p "Usuario de PROXMOX (ej: tfm-test@pve): " PROXMOX_USERNAME
 fi
 if [[ -z "${PROXMOX_USERNAME:-}" ]]; then
   echo "[ERROR] PROXMOX_USERNAME vacío." >&2
@@ -60,7 +60,7 @@ if [[ "$USE_KEYCHAIN_LOAD" == "yes" && -z "${PROXMOX_PASSWORD:-}" ]]; then
 fi
 
 if [[ -z "${PROXMOX_PASSWORD:-}" ]]; then
-  printf "PROXMOX password: "
+  printf "Contraseña de PROXMOX: "
   stty -echo
   IFS= read -r PROXMOX_PASSWORD
   stty echo
@@ -76,7 +76,7 @@ if [[ "$USE_KEYCHAIN_SAVE" == "yes" ]]; then
     echo "[WARN] 'security' no disponible; no se puede guardar en Keychain."
   else
     security add-generic-password -U -a "$KEYCHAIN_ACCOUNT" -s "$KEYCHAIN_SERVICE" -w "$PROXMOX_PASSWORD" >/dev/null
-    echo "[INFO] Password guardada en Keychain ($KEYCHAIN_SERVICE / $KEYCHAIN_ACCOUNT)."
+    echo "[INFO] Contraseña guardada en Keychain ($KEYCHAIN_SERVICE / $KEYCHAIN_ACCOUNT)."
   fi
 fi
 

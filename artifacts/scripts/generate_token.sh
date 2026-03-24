@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Genera un token efimero de demo en Vault desde Mac local:
-# Mac -> SSH proxmox -> pct exec 502 -> vault token create
+# Genera un token efímero de demo en Vault desde macOS local:
+# macOS -> SSH proxmox -> pct exec 502 -> vault token create
 #
 # Uso:
 #   bash artifacts/scripts/generate_token.sh
@@ -21,7 +21,7 @@ set -euo pipefail
 #   SAVE_TO_KEYCHAIN=yes|no
 #
 # Salida:
-#   Imprime SOLO el token efimero por stdout (sin texto adicional).
+#   Imprime SOLO el token efímero por stdout (sin texto adicional).
 
 PROXMOX_HOST="${PROXMOX_HOST:-proxmox}"
 PROXMOX_USER="${PROXMOX_USER:-tfm-test}"

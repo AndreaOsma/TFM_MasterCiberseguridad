@@ -5,7 +5,11 @@ export VAULT_ADDR="${VAULT_ADDR:-http://127.0.0.1:8200}"
 export PGHOST="${PGHOST:-192.168.1.230}"
 export PGPORT="${PGPORT:-5432}"
 export PGDATABASE="${PGDATABASE:-postgres}"
-export VAULT_TOKEN="${VAULT_TOKEN:?VAULT_TOKEN is required}"
+if [[ -z "${VAULT_TOKEN:-}" ]]; then
+  echo "[ERROR] VAULT_TOKEN es obligatorio." >&2
+  exit 1
+fi
+export VAULT_TOKEN
 
 start_issue_ms="$(date +%s%3N)"
 vault read -format=json database/creds/readonly-role > /tmp/val-creds.json
@@ -48,7 +52,7 @@ set -e
 
 role_exists="$(PGPASSWORD='tfm-vault-db-admin' psql -h "$PGHOST" -U postgres -d "$PGDATABASE" -tAc "SELECT 1 FROM pg_roles WHERE rolname='${db_user}';" | tr -d '[:space:]')"
 
-# Negative test: token without DB policy should be denied
+# Prueba negativa: un token sin política de BD debe ser denegado.
 cat >/tmp/deny-policy.hcl <<'EOF'
 path "sys/health" {
   capabilities = ["read"]
@@ -62,7 +66,7 @@ VAULT_TOKEN="$deny_token" vault read database/creds/readonly-role >/tmp/val-deny
 deny_rc=$?
 set -e
 
-# Hypothesis-oriented assertions.
+# Aserciones orientadas a hipótesis.
 ttl_within_expected_window="no"
 if [[ "$lease_ttl" -le 300 && "$lease_ttl" -gt 0 ]]; then
   ttl_within_expected_window="yes"

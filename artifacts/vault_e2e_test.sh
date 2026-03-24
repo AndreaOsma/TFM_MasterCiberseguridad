@@ -2,7 +2,11 @@
 set -euo pipefail
 
 export VAULT_ADDR="${VAULT_ADDR:-http://127.0.0.1:8200}"
-export VAULT_TOKEN="${VAULT_TOKEN:?VAULT_TOKEN is required}"
+if [[ -z "${VAULT_TOKEN:-}" ]]; then
+  echo "[ERROR] VAULT_TOKEN es obligatorio." >&2
+  exit 1
+fi
+export VAULT_TOKEN
 export PGHOST="${PGHOST:-192.168.1.230}"
 export PGPORT="${PGPORT:-5432}"
 export PGDATABASE="${PGDATABASE:-postgres}"

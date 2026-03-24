@@ -43,6 +43,6 @@ all:
           ansible_user: debian
 EOF
 
-# Remove CIDR suffix if present (e.g. /24, /32).
+# Elimina sufijos CIDR si existen (p. ej. /24, /32).
 sed -E -i.bak 's#/([0-9]{1,2})##g' "$OUT_FILE" && rm -f "$OUT_FILE.bak"
-echo "[OK] Inventory generated at: $OUT_FILE"
+echo "[OK] Inventario generado en: $OUT_FILE"

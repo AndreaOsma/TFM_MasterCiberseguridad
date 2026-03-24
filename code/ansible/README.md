@@ -1,33 +1,33 @@
-# Ansible provisioning for TFM lab
+# Aprovisionamiento Ansible del laboratorio TFM
 
-This directory configures each Terraform-created node in the lab:
+Este directorio configura cada nodo del laboratorio creado con Terraform:
 
 - `gitea-runner` (LXC)
 - `vault-server` (LXC)
 - `postgres-db` (LXC)
 - `k3s-cluster` (VM)
 
-## Structure
+## Estructura
 
-- `ansible.cfg`: common runtime settings
-- `inventories/lab/hosts.yml`: static inventory (default IPs)
-- `playbooks/site.yml`: orchestrates all node playbooks
-- `playbooks/lxc_gitea.yml`: baseline for Gitea runner node
-- `playbooks/lxc_vault.yml`: installs and configures Vault service
-- `playbooks/lxc_postgres.yml`: installs and enables PostgreSQL
-- `playbooks/vm_k3s.yml`: installs and starts K3s
-- `scripts/render_inventory_from_tf.sh`: builds inventory from Terraform outputs
+- `ansible.cfg`: parámetros comunes de ejecución
+- `inventories/lab/hosts.yml`: inventario estático (IP por defecto)
+- `playbooks/site.yml`: orquesta todos los playbooks por nodo
+- `playbooks/lxc_gitea.yml`: configuración base del nodo Gitea runner
+- `playbooks/lxc_vault.yml`: instalación y configuración del servicio Vault
+- `playbooks/lxc_postgres.yml`: instalación y habilitación de PostgreSQL
+- `playbooks/vm_k3s.yml`: instalación y arranque de K3s
+- `scripts/render_inventory_from_tf.sh`: genera inventario desde salidas de Terraform
 
-## Execution flow
+## Flujo de ejecución
 
-1. Deploy infrastructure with Terraform (from `code/terraform`):
+1. Desplegar la infraestructura con Terraform (desde `code/terraform`):
 
 ```bash
 terraform init
 terraform apply
 ```
 
-2. Generate inventory from Terraform outputs:
+2. Generar el inventario a partir de salidas de Terraform:
 
 ```bash
 cd code/ansible
@@ -35,21 +35,21 @@ chmod +x scripts/render_inventory_from_tf.sh
 ./scripts/render_inventory_from_tf.sh
 ```
 
-3. Run all provisioning playbooks:
+3. Ejecutar todos los playbooks de aprovisionamiento:
 
 ```bash
 ansible-playbook playbooks/site.yml
 ```
 
-4. Optional check (connectivity and remote facts):
+4. Comprobación opcional (conectividad y datos remotos):
 
 ```bash
 ansible all -m ping
 ansible all -m command -a "cat /etc/tfm-node-role"
 ```
 
-## Notes
+## Notas
 
-- The inventory expects SSH key-based access.
-- Vault bootstrap via Terraform remains optional (`enable_vault_bootstrap`).
-- Playbooks are designed to be idempotent and safe to rerun.
+- El inventario asume acceso SSH mediante clave.
+- El bootstrap de Vault por Terraform es opcional (`enable_vault_bootstrap`).
+- Los playbooks están diseñados para ser idempotentes y seguros al re-ejecutarse.
