@@ -5,7 +5,7 @@
 \usepackage[spanish,es-noquoting,es-noshorthands]{babel}
 \usepackage{graphicx}
 \usepackage{setspace}
-\usepackage{hyperref}
+\usepackage[hypertexnames=false]{hyperref}
 \usepackage{listings}
 \usepackage{geometry}
 \usepackage{booktabs}
@@ -33,6 +33,13 @@
 }
 
 \onehalfspacing
+\setlength{\emergencystretch}{3em}
+
+% Evita destinos duplicados de hipervínculos en figuras/tablas.
+\makeatletter
+\renewcommand*{\theHfigure}{\thesection.\arabic{figure}}
+\renewcommand*{\theHtable}{\thesection.\arabic{table}}
+\makeatother
 
 \lstset{
     basicstyle=\ttfamily\footnotesize,
@@ -464,10 +471,10 @@ Durante la ejecución del flujo propuesto, el runner obtiene credenciales de for
 
 Como validación operativa directa en Proxmox, se ejecutó una prueba extremo a extremo sobre el motor dinámico de base de datos de \gls{vault} con una credencial efímera real:
 \begin{enumerate}
-    \item Se solicitó una credencial dinámica (\texttt{database/creds/readonly-role}) y se obtuvo un usuario temporal único con \textit{lease} asociado.
-    \item Con esa credencial se ejecutó una consulta satisfactoria en PostgreSQL (\texttt{pre\_revoke\_query=ok}).
+    \item Se solicitó una credencial dinámica (\path{database/creds/readonly-role}) y se obtuvo un usuario temporal único con \textit{lease} asociado.
+    \item Con esa credencial se ejecutó una consulta satisfactoria en PostgreSQL (\path{pre_revoke_query=ok}).
     \item Se revocó la \textit{lease} en modo síncrono (\texttt{revoke\_rc=0} y confirmación de revocación exitosa).
-    \item Tras la revocación, la misma credencial dejó de autenticar (\texttt{post\_revoke\_query=failed\_expected}) y el rol temporal ya no existía en \texttt{pg\_roles} (\texttt{post\_revoke\_role\_exists=no}).
+    \item Tras la revocación, la misma credencial dejó de autenticar (resultado esperado: \texttt{failed\_expected}) y el rol temporal ya no existía en \texttt{pg\_roles} (\texttt{post\_revoke\_role\_exists=no}).
 \end{enumerate}
 Este resultado confirma de forma empírica el comportamiento esperado de emisión efímera y revocación efectiva, alineado con la hipótesis de reducción de persistencia del riesgo por \gls{secretsprawl}.
 
@@ -489,24 +496,24 @@ En la validación experimental se observó:
 \end{enumerate}
 
 \subsection{Pruebas complementarias con métricas, casos negativos y criterio de hipótesis}
-Para reforzar la validez experimental, se ejecutó una batería adicional automatizada sobre Proxmox (artefacto: \texttt{artifacts/validation/proxmox\_validation\_results.txt}) orientada explícitamente a validar hipótesis y no solo disponibilidad de servicios. La prueba se diseña con tres aserciones técnicas:
+Para reforzar la validez experimental, se ejecutó una batería adicional automatizada sobre Proxmox (artefacto: \path{artifacts/validation/proxmox_validation_results.txt}) orientada explícitamente a validar hipótesis y no solo disponibilidad de servicios. La prueba se diseña con tres aserciones técnicas:
 \begin{enumerate}
     \item \textbf{Reducción de ventana de exposición:} el \gls{ttl} de la credencial dinámica debe quedar acotado y, tras revocación, la credencial no debe reutilizarse.
     \item \textbf{Revocación efectiva:} además del fallo de autenticación post-revocación, el rol efímero debe desaparecer de \texttt{pg\_roles}.
-    \item \textbf{Bloqueo de abuso por política:} un token sin permisos sobre \texttt{database/creds/readonly-role} debe ser denegado.
+    \item \textbf{Bloqueo de abuso por política:} un token sin permisos sobre la ruta de credenciales dinámicas debe ser denegado.
 \end{enumerate}
-A partir de estas aserciones, el propio script calcula un veredicto por hipótesis (\texttt{supported/not\_supported}) y un veredicto global (\texttt{hypothesis\_overall}).
+A partir de estas aserciones, el propio script calcula un veredicto por hipótesis (\path{supported/not_supported}) y un veredicto global (\path{hypothesis_overall}).
 \par
 Los resultados observados fueron:
 \begin{itemize}
-    \item \textbf{Tiempo de emisión de credencial dinámica:} \texttt{issue\_ms=107} ms.
-    \item \textbf{Tiempo de revocación síncrona:} \texttt{revoke\_ms=103} ms.
-    \item \textbf{\gls{ttl} efectivo de lease:} \texttt{lease\_ttl\_seconds=60}.
-    \item \textbf{Prueba positiva de uso:} credencial recién emitida válida en PostgreSQL (\texttt{pre\_revoke\_query=ok}).
-    \item \textbf{Prueba negativa de revocación:} tras revocar, la credencial deja de operar (\texttt{post\_revoke\_query=failed\_expected}) y el rol efímero se elimina del catálogo (\texttt{post\_revoke\_role\_exists=no}).
-    \item \textbf{Prueba negativa de autorización:} un token sin política de lectura a \texttt{database/creds/readonly-role} recibe denegación (\texttt{unauthorized\_token\_access=denied\_expected}).
+    \item \textbf{Tiempo de emisión de credencial dinámica:} \path{issue_ms=107} ms.
+    \item \textbf{Tiempo de revocación síncrona:} \path{revoke_ms=103} ms.
+    \item \textbf{\gls{ttl} efectivo de lease:} \path{lease_ttl_seconds=60}.
+    \item \textbf{Prueba positiva de uso:} credencial recién emitida válida en PostgreSQL (\path{pre_revoke_query=ok}).
+    \item \textbf{Prueba negativa de revocación:} tras revocar, la credencial deja de operar (\path{post_revoke_query=failed_expected}) y el rol efímero se elimina del catálogo (\path{post_revoke_role_exists=no}).
+    \item \textbf{Prueba negativa de autorización:} un token sin política de lectura a \path{database/creds/readonly-role} recibe denegación (\path{unauthorized_token_access=denied_expected}).
 \end{itemize}
-En esta ejecución, los indicadores derivados fueron consistentes con apoyo de hipótesis (\texttt{ttl\_within\_expected\_window=yes}, \texttt{revocation\_effective=yes}, \texttt{unauthorized\_access\_blocked=yes}, \texttt{hypothesis\_overall=supported}). Estos resultados incrementan el nivel de evidencia más allá de la validación funcional cualitativa, al demostrar comportamiento temporal y de control de acceso con criterios verificables en ejecución real.
+En esta ejecución, los indicadores derivados fueron consistentes con apoyo de hipótesis: \texttt{ttl\_within\_expected\_window=yes}, \texttt{revocation\_effective=yes}, \texttt{unauthorized\_access\_blocked=yes} y \texttt{hypothesis\_overall=supported}. Estos resultados incrementan el nivel de evidencia más allá de la validación funcional cualitativa, al demostrar comportamiento temporal y de control de acceso con criterios verificables en ejecución real.
 
 \section{Discusión}
 
