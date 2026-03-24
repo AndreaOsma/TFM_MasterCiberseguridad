@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Asistente de demo para video del TFM (modo "siguiente, siguiente").
+# Asistente de demo para vídeo del TFM (modo "siguiente, siguiente").
 # Flujo:
-# 1) Abrir la presentacion.
-# 2) Pausar por bloques para narracion.
-# 3) Ejecutar validacion completa de hipotesis en Proxmox (CT Vault).
+# 1) Abrir la presentación.
+# 2) Pausar por bloques para narración.
+# 3) Ejecutar validación completa de hipótesis en Proxmox (CT Vault).
 # 4) Mostrar resumen compacto con veredicto final.
 #
 # Uso:
@@ -19,12 +19,12 @@ set -euo pipefail
 #   ALLOW_FALLBACK=yes|no
 #   VAULT_ADMIN_TOKEN=<token>    # opcional, para evitar prompt
 #   AUTO_NEXT=yes|no             # yes: sin pausas interactivas
-#   OPEN_PRESENTATION=yes|no      # no: no abre PDF automaticamente
+#   OPEN_PRESENTATION=yes|no      # no: no abre PDF automáticamente
 #   SLIDE_CONTROL=yes|no          # yes: enviar "siguiente diapositiva"
 #   PRESENTATION_APP="Microsoft Edge"
 #   SLIDE_KEY=right|space         # tecla principal para avanzar
-#   TOTAL_STEPS=17                # numero total de "siguientes"
-#   VALIDATION_STEP=11            # paso donde ejecutar validacion tecnica
+#   TOTAL_STEPS=17                # número total de "siguientes"
+#   VALIDATION_STEP=11            # paso donde ejecutar validación técnica
 #   KEYCHAIN_SERVICE=tfm-vault-admin-token
 #   KEYCHAIN_ACCOUNT=proxmox-vault-admin
 
@@ -262,7 +262,7 @@ step_text() {
     15) echo "Discusion y limites." ;;
     16) echo "Backlog y trabajo futuro." ;;
     17) echo "Conclusiones y cierre." ;;
-    *) echo "Paso de presentacion." ;;
+    *) echo "Paso de presentación." ;;
   esac
 }
 
