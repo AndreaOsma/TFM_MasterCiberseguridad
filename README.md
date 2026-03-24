@@ -41,7 +41,7 @@ Repositorio del TFM de Máster en Ciberseguridad centrado en mitigar `Secret Spr
 ### 1) Ejecutar demo guiada única
 
 ```bash
-cd "/Volumes/SSD 2TB/[01] Proyectos/TFM_MasterCiberseguridad"
+cd /ruta/al/repositorio/TFM_MasterCiberseguridad
 ./run_demo.sh
 ```
 
