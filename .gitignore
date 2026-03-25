@@ -4,6 +4,7 @@ Thumbs.db
 [Dd]esktop.ini
 *.code-workspace
 TFM_*.pdf
+main.pdf
 
 # === Documentación derivada ===
 presentacion_tfm_marp.html
