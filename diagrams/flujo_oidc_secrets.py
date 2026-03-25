@@ -6,13 +6,13 @@ from diagrams.onprem.compute import Server
 
 graph_attr = {
     # Ajustes globales para lectura nítida en PDF y presentación.
-    "fontsize": "20",
+    "fontsize": "22",
     "fontname": "Helvetica-Bold",
-    "pad": "0.5",
-    "splines": "ortho",
-    "nodesep": "1.05",
-    "ranksep": "1.1",
-    "dpi": "240",
+    "pad": "0.65",
+    "splines": "spline",
+    "nodesep": "1.15",
+    "ranksep": "1.25",
+    "dpi": "420",
     "bgcolor": "#FAFAFA",
     "labelloc": "t",
     "labeljust": "c",
@@ -20,7 +20,7 @@ graph_attr = {
 
 node_attr = {
     # Nodos claros y neutros; el significado principal va en las aristas.
-    "fontsize": "12",
+    "fontsize": "13",
     "fontname": "Helvetica",
     "shape": "box",
     "style": "rounded,filled",
@@ -30,13 +30,13 @@ node_attr = {
 
 edge_attr = {
     # Etiquetas compactas para mantener la secuencia legible.
-    "fontsize": "10",
+    "fontsize": "11",
     "fontname": "Helvetica",
     "color": "#5F6368",
 }
 
 with Diagram(
-    "Flujo OIDC para emisión y revocación de credenciales",
+    "Flujo OIDC (JWT) -> Vault -> PostgreSQL\nCredenciales TTL y revocación (DROP ROLE)",
     filename="diagrams/flujo_oidc_secrets",
     outformat=["png", "svg"],
     show=False,
@@ -46,27 +46,45 @@ with Diagram(
     edge_attr=edge_attr,
 ):
     with Cluster(
-        "Identidad y CI/CD",
+        "CI/CD (Runner) y Proveedor OIDC",
         graph_attr={"bgcolor": "#E8F0FE", "style": "rounded", "color": "#AECBFA"},
     ):
-        oidc = Server("OIDC Provider")
-        runner = Gitea("Gitea + Act Runner")
+        oidc = Server("Proveedor OIDC")
+        runner = Gitea("Gitea + Act Runner\n(pipeline)")
 
     with Cluster(
-        "Plano de Secretos",
+        "Vault y Motor de Base de Datos",
         graph_attr={"bgcolor": "#FFFFFF", "style": "rounded", "color": "#DADCE0"},
     ):
-        vault = Vault("Vault")
-        postgres = Postgresql("PostgreSQL")
+        vault = Vault("Vault\n(auth + database secrets)")
+        postgres = Postgresql("PostgreSQL v17\n(sistema objetivo)")
 
-    # Flujo de federación de identidad (OIDC/JWT).
-    runner >> Edge(label="1. Solicita token OIDC", color="#1A73E8", penwidth="2.0") >> oidc
-    oidc >> Edge(label="2. Emite JWT firmado", color="#1A73E8", style="dashed") >> runner
-    runner >> Edge(label="3. Login OIDC con JWT", color="#1A73E8", penwidth="2.0") >> vault
-    vault >> Edge(label="4. Verifica JWT y policy", color="#5F6368", style="dashed") >> oidc
-    # Flujo de emisión y consumo de credencial efímera.
-    vault >> Edge(label="5. Crea rol temporal (TTL)", color="#0F9D58", penwidth="2.0") >> postgres
-    vault >> Edge(label="6. Entrega credenciales efimeras", color="#0F9D58", style="dashed") >> runner
-    runner >> Edge(label="7. Acceso temporal a DB", color="#D93025", penwidth="2.0") >> postgres
-    # Cierre del ciclo de vida del secreto con revocación explícita.
-    vault >> Edge(label="8. Revoca acceso (DROP ROLE)", color="#D93025", style="dashed") >> postgres
+    # Flujo federado (OIDC/JWT) + emisión dinámica (TTL) y revocación.
+    runner >> Edge(label="1) Solicita token OIDC", color="#1A73E8", penwidth="2.0") >> oidc
+    oidc >> Edge(label="2) JWT firmado\n(credencial efímera de identidad)", color="#1A73E8", style="dashed") >> runner
+    runner >> Edge(
+        label="3) Login Vault con JWT\n(valida firma + policy)",
+        color="#1A73E8",
+        penwidth="2.0",
+    ) >> vault
+
+    vault >> Edge(
+        label="4) Genera rol efímero TTL\n(database/creds/readonly-role)",
+        color="#0F9D58",
+        penwidth="2.0",
+    ) >> postgres
+    vault >> Edge(
+        label="5) Devuelve credencial\n(lease con TTL)",
+        color="#0F9D58",
+        style="dashed",
+    ) >> runner
+    runner >> Edge(
+        label="6) Consulta temporal\n(SELECT read-only)",
+        color="#D93025",
+        penwidth="2.0",
+    ) >> postgres
+    vault >> Edge(
+        label="7) Revoca lease => DROP ROLE",
+        color="#D93025",
+        style="dashed",
+    ) >> postgres

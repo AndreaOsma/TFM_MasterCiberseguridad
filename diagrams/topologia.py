@@ -8,13 +8,13 @@ from diagrams.k8s.compute import Pod
 
 graph_attr = {
     # Estilo global para legibilidad en memoria y diapositivas.
-    "fontsize": "20",
+    "fontsize": "22",
     "fontname": "Helvetica-Bold",
-    "pad": "0.55",
-    "splines": "ortho",
-    "nodesep": "0.95",
-    "ranksep": "1.1",
-    "dpi": "240",
+    "pad": "0.7",
+    "splines": "spline",
+    "nodesep": "1.05",
+    "ranksep": "1.25",
+    "dpi": "420",
     "bgcolor": "#FAFAFA",
     "labelloc": "t",
     "labeljust": "c",
@@ -22,7 +22,7 @@ graph_attr = {
 
 node_attr = {
     # Nodos neutros para destacar los flujos por color de arista.
-    "fontsize": "12",
+    "fontsize": "13",
     "fontname": "Helvetica",
     "shape": "box",
     "style": "rounded,filled",
@@ -32,13 +32,13 @@ node_attr = {
 
 edge_attr = {
     # Tipografía compacta para etiquetas de flujo.
-    "fontsize": "10",
+    "fontsize": "11",
     "fontname": "Helvetica",
     "color": "#5F6368",
 }
 
 with Diagram(
-    "Arquitectura del laboratorio y flujo de credenciales dinámicas",
+    "Topología del laboratorio (Proxmox + LXC) y flujo de credenciales dinámicas",
     filename="diagrams/topologia",
     outformat=["png", "svg"],
     show=False,
@@ -49,35 +49,60 @@ with Diagram(
 ):
     
     with Cluster(
-        "Plano de Administración (CLI)",
+        "Administración (CLI) e IaC",
         graph_attr={"bgcolor": "#E8F0FE", "style": "rounded", "color": "#AECBFA"},
     ):
-        tf = Terraform("Terraform\n(Policy-as-Code)")
+        tf = Terraform("Terraform\n(Policies + DB engine)")
 
     with Cluster(
         "Proxmox VE 8.4 (Hipervisor Tipo 1)",
         graph_attr={"bgcolor": "#FFFFFF", "style": "rounded", "color": "#DADCE0"},
     ):
         
-        with Cluster("Zona Orquestación (VM)"):
-            k3s = Server("K3s v1.34.5+k3s1")
-            workload = Pod("Carga de Trabajo")
+        with Cluster("VM 1 (k3s) - orquestación"):
+            k3s = Server("k3s v1.34.5+k3s1")
+            workload = Pod("Carga de trabajo\n(opcional)")
             k3s - Edge(color="transparent") - workload
             
-        with Cluster("Zona Servicios Core (LXC)"):
-            gitea = Gitea("LXC 1: Gitea + Act Runner\n(CI/CD Pipeline)")
-            vault = Vault("LXC 2: HashiCorp Vault\n(Bóveda Raft)")
+        with Cluster("LXC core (servicios)"):
+            gitea = Gitea("LXC 1: Gitea + Act Runner\n(CI/CD)")
+            vault = Vault("LXC 2: HashiCorp Vault\nRaft + DB secrets")
             db = Postgresql("LXC 3: PostgreSQL v17\n(Target DB)")
 
-    tf >> Edge(label="0. Aplica Políticas y Roles (HCL)", color="#555555", style="dashed") >> vault
+    # Flujo de secretos (verde/azul/rojo) ajustado al texto del TFM.
+    tf >> Edge(
+        label="Define políticas + motores\n(HCL)",
+        color="#555555",
+        style="dashed",
+    ) >> vault
 
-    # Flujo de identidad (azul): autenticación de workloads.
-    gitea >> Edge(label="1. Auth OIDC (Token JWT)", color="#1A73E8", penwidth="2.0") >> vault
-    workload >> Edge(label="1b. Auth Service Account", color="#1A73E8", style="dotted") >> vault
+    # Flujo de autenticación y autorización hacia Vault.
+    gitea >> Edge(
+        label="Login con OIDC/JWT\n(Auth Vault)",
+        color="#1A73E8",
+        penwidth="2.0",
+    ) >> vault
 
-    # Flujo de secretos (verde): emisión de credencial efímera.
-    vault >> Edge(label="2. Crea Rol Temporal (TTL)", color="#0F9D58", penwidth="2.0") >> db
-    vault >> Edge(label="3. Devuelve Credencial a Memoria", color="#0F9D58", style="dashed") >> gitea
+    # Emisión dinámica (TTL) y entrega de credencial efímera.
+    vault >> Edge(
+        label="Crea rol efímero TTL\n(database/creds/readonly-role)",
+        color="#0F9D58",
+        penwidth="2.0",
+    ) >> db
+    vault >> Edge(
+        label="Devuelve credencial\n(lease)",
+        color="#0F9D58",
+        style="dashed",
+    ) >> gitea
 
-    # Flujo de uso de datos (rojo): acceso temporal con credencial emitida.
-    gitea >> Edge(label="4. Acceso Efímero (PostgreSQL)", color="#D93025", penwidth="2.0") >> db
+    # Uso temporal y revocación (DROP ROLE) en PostgreSQL.
+    gitea >> Edge(
+        label="Consulta temporal\n(SELECT read-only)",
+        color="#D93025",
+        penwidth="2.0",
+    ) >> db
+    vault >> Edge(
+        label="Revoca lease => DROP ROLE",
+        color="#D93025",
+        style="dashed",
+    ) >> db

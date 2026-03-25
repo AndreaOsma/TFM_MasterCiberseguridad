@@ -29,7 +29,7 @@ set -euo pipefail
 #   KEYCHAIN_ACCOUNT=proxmox-vault-admin
 #   AUTO_SCREEN_RECORD=yes|no     # graba pantalla (macOS) con screencapture
 #   SCREEN_RECORD_AUDIO=yes|no   # incluye audio de micrófono (-g) en screencapture
-#   SCREEN_RECORD_CURSOR=yes|no  # captura el cursor en vídeo (-C) en screencapture
+#   SCREEN_RECORD_POINTER=yes|no  # incluye el puntero en el vídeo (-C) en screencapture
 #   SCREEN_RECORD_AUDIO_DEVICE_ID=<id>  # opcional: usa -G<id> para elegir dispositivo de micrófono
 #   SCREEN_RECORD_DISPLAY=1       # display principal por defecto
 #   SCREEN_RECORD_DIR=artifacts/recordings
@@ -86,7 +86,7 @@ PRESENTATION_FILE="${ROOT_DIR}/artifacts/presentation/presentacion_tfm_marp.pdf"
 
 AUTO_SCREEN_RECORD="${AUTO_SCREEN_RECORD:-no}"
 SCREEN_RECORD_AUDIO="${SCREEN_RECORD_AUDIO:-yes}"
-SCREEN_RECORD_CURSOR="${SCREEN_RECORD_CURSOR:-yes}"
+SCREEN_RECORD_POINTER="${SCREEN_RECORD_POINTER:-yes}"
 SCREEN_RECORD_AUDIO_DEVICE_ID="${SCREEN_RECORD_AUDIO_DEVICE_ID:-}"
 SCREEN_RECORD_DISPLAY="${SCREEN_RECORD_DISPLAY:-1}"
 SCREEN_RECORD_DIR="${SCREEN_RECORD_DIR:-artifacts/recordings}"
@@ -102,7 +102,7 @@ PRESENTATION_FORCE_COVER_RETRIES="${PRESENTATION_FORCE_COVER_RETRIES:-1}"
 PRESENTATION_FORCE_COVER_DELAY_SEC="${PRESENTATION_FORCE_COVER_DELAY_SEC:-0.2}"
 
 FOCUS_FULLSCREEN_ON_START="${FOCUS_FULLSCREEN_ON_START:-yes}"
-FOCUS_APP="${FOCUS_APP:-Cursor}"
+FOCUS_APP="${FOCUS_APP:-Terminal}"
 FOCUS_APP_PROCESS="${FOCUS_APP_PROCESS:-$FOCUS_APP}"
 FOCUS_EDGE_LAYOUT="${FOCUS_EDGE_LAYOUT:-yes}"
 FOCUS_EDGE_MARGIN_PX="${FOCUS_EDGE_MARGIN_PX:-10}"
@@ -416,7 +416,7 @@ OSA
 advance_or_warn() {
   if ! advance_slide; then
     echo "[WARN] No se pudo avanzar diapositiva por script."
-    echo "       Revisa permisos de Accesibilidad/Automatizacion para Cursor/Terminal."
+    echo "       Revisa permisos de Accesibilidad/Automatizacion para la app de enfoque/Terminal."
   fi
 }
 
@@ -452,7 +452,7 @@ start_screen_recording() {
   fi
 
   local cmd=(screencapture -v -D"$SCREEN_RECORD_DISPLAY")
-  if [[ "$SCREEN_RECORD_CURSOR" == "yes" ]]; then
+  if [[ "$SCREEN_RECORD_POINTER" == "yes" ]]; then
     cmd+=(-C)
   fi
   if [[ "$SCREEN_RECORD_AUDIO" == "yes" ]]; then
@@ -464,7 +464,7 @@ start_screen_recording() {
   fi
   cmd+=("$SCREEN_RECORD_FILE")
 
-  echo "[INFO] Grabando pantalla -> $SCREEN_RECORD_FILE (display=$SCREEN_RECORD_DISPLAY, cursor=$SCREEN_RECORD_CURSOR, audio=$SCREEN_RECORD_AUDIO)"
+  echo "[INFO] Grabando pantalla -> $SCREEN_RECORD_FILE (display=$SCREEN_RECORD_DISPLAY, puntero=$SCREEN_RECORD_POINTER, audio=$SCREEN_RECORD_AUDIO)"
   "${cmd[@]}" >/dev/null 2>&1 &
   recording_pid="$!"
 
