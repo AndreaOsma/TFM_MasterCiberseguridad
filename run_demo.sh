@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Asistente de demo para vídeo del TFM (modo "siguiente, siguiente").
+# Asistente de demo para vídeo del TFM.
 # Flujo:
 # 1) Abrir la presentación.
 # 2) Pausar por bloques para narración.
