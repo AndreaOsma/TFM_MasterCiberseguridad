@@ -55,3 +55,11 @@ texput.log
 
 # Instrucciones privadas / no versionadas
 .private/
+
+# Outputs generados por demos/campañas (no versionar)
+artifacts/validation/
+artifacts/recordings/
+
+# Packs generados localmente (no versionar)
+artifacts/release/*.zip
+artifacts/release/*.tar.gz
