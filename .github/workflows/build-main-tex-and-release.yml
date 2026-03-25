@@ -1,7 +1,6 @@
 name: Build main.tex PDF and publish to Release (tag)
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - "*"
