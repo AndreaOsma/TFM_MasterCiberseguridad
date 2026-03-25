@@ -27,16 +27,6 @@ set -euo pipefail
 #   VALIDATION_STEP=11            # paso donde ejecutar validación técnica
 #   KEYCHAIN_SERVICE=tfm-vault-admin-token
 #   KEYCHAIN_ACCOUNT=proxmox-vault-admin
-#   AUTO_SCREEN_RECORD=yes|no     # graba pantalla (macOS) con screencapture
-#   SCREEN_RECORD_AUDIO=yes|no   # incluye audio de micrófono (-g) en screencapture
-#   SCREEN_RECORD_CURSOR=yes|no  # captura el cursor en vídeo (-C) en screencapture
-#   SCREEN_RECORD_AUDIO_DEVICE_ID=<id>  # opcional: usa -G<id> para elegir dispositivo de micrófono
-#   SCREEN_RECORD_DISPLAY=1       # display principal por defecto
-#   SCREEN_RECORD_DIR=artifacts/recordings
-#   SCREEN_RECORD_FILE=<ruta>     # opcional: override del archivo .mov
-#   SCREEN_RECORD_CLEAN_BEFORE=yes|no  # limpia punteros 'latest' antes de grabar
-#   SCREEN_RECORD_STOP_TIMEOUT_SEC=4   # tiempo máximo para parar la grabación
-#   SCREEN_RECORD_VIDEO_MARKER=yes|no  # muestra una notificación visible (osascript) al inicio/fin
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
@@ -66,21 +56,6 @@ KEYCHAIN_SERVICE="${KEYCHAIN_SERVICE:-tfm-vault-admin-token}"
 KEYCHAIN_ACCOUNT="${KEYCHAIN_ACCOUNT:-proxmox-vault-admin}"
 SSH_TARGET="${PROXMOX_USER}@${PROXMOX_HOST}"
 PRESENTATION_FILE="${ROOT_DIR}/artifacts/presentation/presentacion_tfm_marp.pdf"
-
-AUTO_SCREEN_RECORD="${AUTO_SCREEN_RECORD:-no}"
-SCREEN_RECORD_AUDIO="${SCREEN_RECORD_AUDIO:-yes}"
-SCREEN_RECORD_CURSOR="${SCREEN_RECORD_CURSOR:-yes}"
-SCREEN_RECORD_AUDIO_DEVICE_ID="${SCREEN_RECORD_AUDIO_DEVICE_ID:-}"
-SCREEN_RECORD_DISPLAY="${SCREEN_RECORD_DISPLAY:-1}"
-SCREEN_RECORD_DIR="${SCREEN_RECORD_DIR:-artifacts/recordings}"
-DEMO_RECORD_STAMP="$(date +%Y%m%d_%H%M%S)"
-SCREEN_RECORD_FILE="${SCREEN_RECORD_FILE:-$SCREEN_RECORD_DIR/video_demo_${DEMO_RECORD_STAMP}.mov}"
-SCREEN_RECORD_LATEST_LINK="${SCREEN_RECORD_LATEST_LINK:-$SCREEN_RECORD_DIR/latest_video_demo.mov}"
-SCREEN_RECORD_LAST_PATH_FILE="${SCREEN_RECORD_LAST_PATH_FILE:-$SCREEN_RECORD_DIR/last_video_demo_path.txt}"
-SCREEN_RECORD_CLEAN_BEFORE="${SCREEN_RECORD_CLEAN_BEFORE:-yes}"
-SCREEN_RECORD_STOP_TIMEOUT_SEC="${SCREEN_RECORD_STOP_TIMEOUT_SEC:-4}"
-SCREEN_RECORD_VIDEO_MARKER="${SCREEN_RECORD_VIDEO_MARKER:-no}"
-recording_pid=""
 
 mkdir -p artifacts/validation
 RAW_OUT="artifacts/validation/demo_run_results.txt"
@@ -164,105 +139,6 @@ advance_or_warn() {
     echo "       Revisa permisos de Accesibilidad/Automatizacion para Cursor/Terminal."
   fi
 }
-
-video_marker() {
-  if [[ "$SCREEN_RECORD_VIDEO_MARKER" != "yes" ]]; then
-    return 0
-  fi
-  if ! command -v osascript >/dev/null 2>&1; then
-    return 0
-  fi
-  local text="$1"
-  # Notificación visible en el vídeo (se apoya en "display notification").
-  osascript >/dev/null 2>&1 <<OSA
-display notification "$text" with title "TFM Demo"
-OSA
-}
-
-start_screen_recording() {
-  if [[ "$AUTO_SCREEN_RECORD" != "yes" ]]; then
-    return 0
-  fi
-  if ! command -v screencapture >/dev/null 2>&1; then
-    echo "[WARN] 'screencapture' no está disponible. Se omite grabación de pantalla." >&2
-    return 0
-  fi
-
-  mkdir -p "$SCREEN_RECORD_DIR"
-  if [[ "$SCREEN_RECORD_CLEAN_BEFORE" == "yes" ]]; then
-    # Evita que, si falla la grabación, el bundle copie un vídeo viejo.
-    rm -f "$SCREEN_RECORD_LATEST_LINK" "$SCREEN_RECORD_LAST_PATH_FILE" "$SCREEN_RECORD_FILE" >/dev/null 2>&1 || true
-  else
-    rm -f "$SCREEN_RECORD_FILE" >/dev/null 2>&1 || true
-  fi
-
-  local cmd=(screencapture -v -D"$SCREEN_RECORD_DISPLAY")
-  if [[ "$SCREEN_RECORD_CURSOR" == "yes" ]]; then
-    cmd+=(-C)
-  fi
-  if [[ "$SCREEN_RECORD_AUDIO" == "yes" ]]; then
-    if [[ -n "${SCREEN_RECORD_AUDIO_DEVICE_ID:-}" ]]; then
-      cmd+=(-G"$SCREEN_RECORD_AUDIO_DEVICE_ID")
-    else
-      cmd+=(-g)
-    fi
-  fi
-  cmd+=("$SCREEN_RECORD_FILE")
-
-  echo "[INFO] Grabando pantalla -> $SCREEN_RECORD_FILE (display=$SCREEN_RECORD_DISPLAY, cursor=$SCREEN_RECORD_CURSOR, audio=$SCREEN_RECORD_AUDIO)"
-  "${cmd[@]}" >/dev/null 2>&1 &
-  recording_pid="$!"
-
-  # Pequeña espera para asegurar que el archivo se crea tras iniciar.
-  sleep 0.3
-}
-
-stop_screen_recording() {
-  if [[ -z "${recording_pid}" ]]; then
-    return 0
-  fi
-
-  # screencapture finaliza al recibir INT, pero usamos timeout y fallback por robustez.
-  if kill -0 "$recording_pid" >/dev/null 2>&1; then
-    kill -INT "$recording_pid" >/dev/null 2>&1 || true
-
-    local timeout_sec="$SCREEN_RECORD_STOP_TIMEOUT_SEC"
-    local start_s
-    start_s="$(date +%s)"
-    while kill -0 "$recording_pid" >/dev/null 2>&1; do
-      if (( "$(date +%s)" - start_s >= timeout_sec )); then
-        break
-      fi
-      sleep 0.2
-    done
-
-    if kill -0 "$recording_pid" >/dev/null 2>&1; then
-      echo "[WARN] screencapture no paró en ${timeout_sec}s; aplicando fallback (TERM/KILL)." >&2
-      kill -TERM "$recording_pid" >/dev/null 2>&1 || true
-      sleep 0.2
-      kill -KILL "$recording_pid" >/dev/null 2>&1 || true
-    fi
-  fi
-
-  wait "$recording_pid" >/dev/null 2>&1 || true
-  recording_pid=""
-
-  if [[ -f "$SCREEN_RECORD_FILE" ]]; then
-    echo "[INFO] Vídeo guardado: $SCREEN_RECORD_FILE"
-    # Punto estable para que el bundle recoja el vídeo exacto de esta ejecución.
-    ln -sf "$SCREEN_RECORD_FILE" "$SCREEN_RECORD_LATEST_LINK" >/dev/null 2>&1 || true
-    printf "%s\n" "$SCREEN_RECORD_FILE" > "$SCREEN_RECORD_LAST_PATH_FILE" 2>/dev/null || true
-  else
-    echo "[WARN] No se pudo confirmar el vídeo grabado: $SCREEN_RECORD_FILE" >&2
-  fi
-}
-
-cleanup_demo() {
-  stop_screen_recording || true
-  unset VAULT_ADMIN_TOKEN || true
-}
-
-trap cleanup_demo EXIT INT TERM
 
 force_cover_slide() {
   if [[ "$SLIDE_CONTROL" != "yes" ]]; then
@@ -399,10 +275,7 @@ echo "[INFO] TOTAL_STEPS=$TOTAL_STEPS | VALIDATION_STEP=$VALIDATION_STEP"
 
 echo
 echo "=== Abrir presentación ==="
-start_screen_recording # (si AUTO_SCREEN_RECORD=yes) empieza antes de abrir el visor
-
 open_presentation
-
 if [[ "$AUTO_NEXT" != "yes" ]]; then
   printf "Pulsa ENTER para iniciar la secuencia de diapositivas..."
   read -r _
@@ -426,14 +299,9 @@ for step in $(seq 1 "$TOTAL_STEPS"); do
   narrate "$(step_text "$step")"
 
   if [[ "$step" -eq "$VALIDATION_STEP" ]]; then
-    video_marker "INICIO_VALIDACION (TFM)"
     run_validation
-    video_marker "FIN_VALIDACION (TFM)"
   fi
 done
-
-# Parada explícita para asegurar que el .mov queda cerrado antes del resumen.
-stop_screen_recording
 
 echo
 echo "[OK] Validación TFM completada."

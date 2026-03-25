@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Ejecuta corridas repetidas de la batería de hipótesis y consolida métricas.
+# Ejecuta ejecuciones repetidas de la batería de hipótesis y consolida métricas.
 #
 # Uso local:
 #   VAULT_TOKEN=... bash artifacts/scripts/validation_campaign.sh
@@ -47,10 +47,10 @@ extract_kv() {
   printf "%s" "${value:-na}"
 }
 
-echo "[INFO] Iniciando campaña con $RUNS corridas..."
+echo "[INFO] Iniciando campaña con $RUNS ejecuciones..."
 for i in $(seq 1 "$RUNS"); do
   run_out="$RAW_DIR/run_${i}.txt"
-  echo "[INFO] Corrida $i/$RUNS"
+  echo "[INFO] Ejecución $i/$RUNS"
 
   set +e
   bash -lc "$RUN_COMMAND" >"$run_out" 2>&1

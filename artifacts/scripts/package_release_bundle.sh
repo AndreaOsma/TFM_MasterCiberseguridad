@@ -19,7 +19,7 @@ STAMP="$(date +%Y%m%d_%H%M%S)"
 BUNDLE_DIR="${RELEASE_DIR}/${RELEASE_TAG}_${STAMP}"
 
 mkdir -p "$BUNDLE_DIR"
-mkdir -p "$BUNDLE_DIR"/{memoria,presentacion,evidencias,scripts,meta}
+mkdir -p "$BUNDLE_DIR"/{memoria,presentacion,evidencias,scripts,meta,video}
 
 copy_if_exists() {
   local src="$1"
@@ -52,10 +52,27 @@ fi
 
 # Scripts de reproduccion
 copy_if_exists "run_demo.sh" "$BUNDLE_DIR/scripts/run_demo.sh"
-copy_if_exists "artifacts/scripts/generate_token.sh" "$BUNDLE_DIR/scripts/generate_token.sh"
 copy_if_exists "artifacts/scripts/proxmox_validation_suite.sh" "$BUNDLE_DIR/scripts/proxmox_validation_suite.sh"
-copy_if_exists "artifacts/scripts/video_demo_run.sh" "$BUNDLE_DIR/scripts/video_demo_run.sh"
-copy_if_exists "artifacts/scripts/validation_campaign.sh" "$BUNDLE_DIR/scripts/validation_campaign.sh"
+
+# Vídeo de la demo (opcional)
+if [[ -d "artifacts/recordings" ]]; then
+  latest_link="artifacts/recordings/latest_video_demo.mov"
+  last_path_file="artifacts/recordings/last_video_demo_path.txt"
+
+  video_src=""
+  if [[ -L "$latest_link" || -f "$latest_link" ]]; then
+    video_src="$latest_link"
+  elif [[ -f "$last_path_file" ]]; then
+    video_src="$(cat "$last_path_file" 2>/dev/null | tr -d '\n' || true)"
+  fi
+
+  if [[ -n "${video_src:-}" && -f "$video_src" ]]; then
+    cp "$video_src" "$BUNDLE_DIR/video/$(basename "$video_src")"
+    echo "[OK] Copiado vídeo de demo: $video_src"
+  else
+    echo "[WARN] No existe vídeo grabado (latest_video_demo.mov) para incluir en el bundle."
+  fi
+fi
 
 # Metadatos minimos de release
 cat > "$BUNDLE_DIR/meta/release_manifest.txt" <<EOF
