@@ -101,7 +101,11 @@ cat > "$BUNDLE_DIR/meta/checklist_entrega.md" <<'EOF'
 EOF
 
 # Empaquetado comprimido
-tar -czf "${BUNDLE_DIR}.tar.gz" -C "$RELEASE_DIR" "$(basename "$BUNDLE_DIR")"
+# Se crea un .zip para facilitar la entrega/descarga en plataformas diversas.
+(
+  cd "$RELEASE_DIR"
+  zip -r -q "$(basename "$BUNDLE_DIR").zip" "$(basename "$BUNDLE_DIR")"
+)
 
 echo "[OK] Bundle generado: $BUNDLE_DIR"
-echo "[OK] Bundle comprimido: ${BUNDLE_DIR}.tar.gz"
+echo "[OK] Bundle comprimido: ${BUNDLE_DIR}.zip"

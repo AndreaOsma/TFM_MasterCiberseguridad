@@ -43,7 +43,37 @@ latexmk -pdf -interaction=nonstopmode main.tex
 
 Si no usas `latexmk`, sigue tu flujo estándar de LaTeX (compilación + bib/biber según configuración).
 
-## Instrucciones operativas (privadas)
+## Demo y empaquetado (público)
 
-Las instrucciones detalladas para ejecutar `run_demo.sh`, capturar vídeo y generar el bundle de defensa están en `.private/` (no versionado).
+Este repo incluye un guion único para automatizar la demo (`run_demo.sh`) y un empaquetador (`artifacts/scripts/package_release_bundle.sh`) para recopilar artefactos.
+
+Ejecutar la demo:
+
+```bash
+./run_demo.sh
+```
+
+Grabar pantalla automáticamente (macOS):
+
+```bash
+AUTO_SCREEN_RECORD=yes ./run_demo.sh
+```
+
+Empaquetar artefactos:
+
+```bash
+bash artifacts/scripts/package_release_bundle.sh
+```
+
+Variables opcionales relevantes:
+- `AUTO_NEXT=yes`: sin pausas interactivas.
+- `SLIDE_CONTROL=no`: no intenta avanzar diapositivas.
+- `VAULT_ADMIN_TOKEN=...`: evita prompt del token admin (si no se pasa, el script intenta leerlo desde Keychain y si no lo encuentra lo solicita por consola).
+- `AUTO_SCREEN_RECORD=yes`: grabación; `SCREEN_RECORD_AUDIO=yes` (por defecto) graba micrófono; `SCREEN_RECORD_CURSOR=yes` graba el cursor.
+- `WINDOW_LAYOUT=yes`: intenta colocar visor a la izquierda y terminal a la derecha (recomendado para terminal “normal” como `Terminal.app` o `iTerm2`).
+- `FOCUS_FULLSCREEN_ON_START=yes` (por defecto): pone la app de enfoque en pantalla completa al arrancar; si activas `FOCUS_EDGE_LAYOUT=yes`, el script saldrá de fullscreen para poder dejar el visor/Edge a la izquierda y la app de enfoque a la derecha.
+- `FOCUS_EDGE_LAYOUT=yes` (por defecto): mueve Edge a la izquierda y la app de enfoque a la derecha cuando empieza la presentación.
+- `FOCUS_REACTIVATE_AFTER_SLIDE=yes` (por defecto): vuelve a poner la app de enfoque al frente justo después de enviar teclas al visor.
+- `FOCUS_APP_PROCESS` (por defecto heredado de `FOCUS_APP`): process name para AppleScript/System Events (ajústalo si tu app no se llama así).
+- `FOCUS_APP=Cursor`: nombre de la app para AppleScript (por defecto `Cursor`).
 

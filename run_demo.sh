@@ -39,8 +39,21 @@ set -euo pipefail
 #   SCREEN_RECORD_VIDEO_MARKER=yes|no  # muestra una notificación visible (osascript) al inicio/fin
 #
 #   PRESENTATION_OPEN_DELAY_SEC=1     # espera tras abrir antes de mandar "Home" / primera navegación
-#   PRESENTATION_FORCE_COVER_RETRIES=3 # reintentos para asegurarnos de caer en portada
+#   PRESENTATION_FORCE_COVER_RETRIES=1 # reintentos para asegurarnos de caer en portada
 #   PRESENTATION_FORCE_COVER_DELAY_SEC=0.2 # espera entre reintentos
+#   FOCUS_FULLSCREEN_ON_START=yes|no # pone la app de enfoque en pantalla completa al empezar
+#   FOCUS_APP="Terminal"              # nombre de la app para AppleScript
+#   FOCUS_APP_PROCESS="Terminal"     # nombre del process para System Events
+#   FOCUS_EDGE_LAYOUT=yes|no         # coloca Edge izquierda y la app de enfoque derecha al abrir
+#   FOCUS_EDGE_MARGIN_PX=10          # margen al redimensionar
+#   FOCUS_REACTIVATE_AFTER_SLIDE=yes|no # reactiva la app de enfoque justo después de enviar teclas a Edge
+#   WINDOW_LAYOUT=yes|no              # intenta colocar visor/visor PDF a la izquierda y terminal a la derecha
+#   TERMINAL_APP="Terminal"          # app de terminal (Terminal, iTerm2, ...)
+#   TERMINAL_APP_PROCESS=<name>      # opcional: process name para AppleScript (por defecto TERMINAL_APP)
+#   PRESENTATION_APP_PROCESS=<name> # opcional: process name para AppleScript (por defecto PRESENTATION_APP)
+#   WINDOW_LAYOUT_MARGIN_PX=10       # margen al redimensionar
+#   WINDOW_LAYOUT_RETRIES=3          # reintentos si aún no hay ventanas listas
+#   WINDOW_LAYOUT_DELAY_SEC=0.2     # espera entre reintentos
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
@@ -85,8 +98,23 @@ SCREEN_RECORD_CLEAN_BEFORE="${SCREEN_RECORD_CLEAN_BEFORE:-yes}"
 SCREEN_RECORD_STOP_TIMEOUT_SEC="${SCREEN_RECORD_STOP_TIMEOUT_SEC:-4}"
 SCREEN_RECORD_VIDEO_MARKER="${SCREEN_RECORD_VIDEO_MARKER:-no}"
 PRESENTATION_OPEN_DELAY_SEC="${PRESENTATION_OPEN_DELAY_SEC:-1}"
-PRESENTATION_FORCE_COVER_RETRIES="${PRESENTATION_FORCE_COVER_RETRIES:-3}"
+PRESENTATION_FORCE_COVER_RETRIES="${PRESENTATION_FORCE_COVER_RETRIES:-1}"
 PRESENTATION_FORCE_COVER_DELAY_SEC="${PRESENTATION_FORCE_COVER_DELAY_SEC:-0.2}"
+
+FOCUS_FULLSCREEN_ON_START="${FOCUS_FULLSCREEN_ON_START:-yes}"
+FOCUS_APP="${FOCUS_APP:-Cursor}"
+FOCUS_APP_PROCESS="${FOCUS_APP_PROCESS:-$FOCUS_APP}"
+FOCUS_EDGE_LAYOUT="${FOCUS_EDGE_LAYOUT:-yes}"
+FOCUS_EDGE_MARGIN_PX="${FOCUS_EDGE_MARGIN_PX:-10}"
+FOCUS_REACTIVATE_AFTER_SLIDE="${FOCUS_REACTIVATE_AFTER_SLIDE:-yes}"
+
+WINDOW_LAYOUT="${WINDOW_LAYOUT:-no}"
+TERMINAL_APP="${TERMINAL_APP:-Terminal}"
+TERMINAL_APP_PROCESS="${TERMINAL_APP_PROCESS:-}"
+PRESENTATION_APP_PROCESS="${PRESENTATION_APP_PROCESS:-}"
+WINDOW_LAYOUT_MARGIN_PX="${WINDOW_LAYOUT_MARGIN_PX:-10}"
+WINDOW_LAYOUT_RETRIES="${WINDOW_LAYOUT_RETRIES:-3}"
+WINDOW_LAYOUT_DELAY_SEC="${WINDOW_LAYOUT_DELAY_SEC:-0.2}"
 recording_pid=""
 
 mkdir -p artifacts/validation
@@ -113,6 +141,198 @@ wait_demo_continue() {
   else
     sleep 0.4
   fi
+}
+
+arrange_windows_left_right() {
+  if [[ "$WINDOW_LAYOUT" != "yes" ]]; then
+    return 0
+  fi
+
+  # Requiere UI scripting (Accesibilidad habilitada) para redimensionar/mover ventanas.
+  if ! command -v osascript >/dev/null 2>&1; then
+    return 1
+  fi
+
+  local pres_proc="${PRESENTATION_APP_PROCESS}"
+  local term_proc="${TERMINAL_APP_PROCESS}"
+  if [[ -z "$pres_proc" ]]; then pres_proc="$PRESENTATION_APP"; fi
+  if [[ -z "$term_proc" ]]; then term_proc="$TERMINAL_APP"; fi
+
+  local retries="$WINDOW_LAYOUT_RETRIES"
+  local delay_sec="$WINDOW_LAYOUT_DELAY_SEC"
+
+  for _ in $(seq 1 "$retries"); do
+    # Finder/desktop bounds -> calculamos la mitad izquierda/derecha.
+    osascript >/dev/null 2>&1 <<OSA
+tell application "Finder"
+  set theBounds to bounds of window of desktop
+end tell
+set sx1 to item 1 of theBounds
+set sy1 to item 2 of theBounds
+set sx2 to item 3 of theBounds
+set sy2 to item 4 of theBounds
+set screenW to (sx2 - sx1)
+set screenH to (sy2 - sy1)
+set midX to sx1 + (screenW / 2)
+set m to $WINDOW_LAYOUT_MARGIN_PX
+set leftX1 to (sx1 + m)
+set leftY1 to (sy1 + m)
+set leftX2 to (midX - m)
+set rightX1 to (midX + m)
+set rightY1 to (sy1 + m)
+set rightX2 to (sx2 - m)
+set bottomY to (sy2 - m)
+
+tell application "System Events"
+  try
+    tell process "$pres_proc"
+      set bounds of front window to {leftX1, leftY1, leftX2, bottomY}
+    end tell
+  end try
+  try
+    tell process "$term_proc"
+      set bounds of front window to {rightX1, rightY1, rightX2, bottomY}
+    end tell
+  end try
+end tell
+OSA
+    if [[ "$?" -eq 0 ]]; then
+      return 0
+    fi
+    sleep "$delay_sec"
+  done
+
+  return 1
+}
+
+focus_make_front() {
+  if [[ "$FOCUS_REACTIVATE_AFTER_SLIDE" != "yes" ]]; then
+    # Aun así intentamos dejar foco al frente si el layout Edge/Foco está activo.
+    if [[ "$FOCUS_EDGE_LAYOUT" != "yes" ]]; then
+      return 0
+    fi
+  fi
+  if ! command -v osascript >/dev/null 2>&1; then
+    return 0
+  fi
+  osascript >/dev/null 2>&1 <<OSA
+tell application "${FOCUS_APP}" to activate
+OSA
+}
+
+focus_fullscreen_on_start() {
+  if [[ "$FOCUS_FULLSCREEN_ON_START" != "yes" ]]; then
+    return 0
+  fi
+  if ! command -v osascript >/dev/null 2>&1; then
+    return 0
+  fi
+
+  osascript >/dev/null 2>&1 <<OSA
+tell application "${FOCUS_APP}" to activate
+delay 0.2
+tell application "System Events"
+  try
+    tell process "${FOCUS_APP_PROCESS}"
+      set isFull to false
+      try
+        set isFull to (value of attribute "AXFullScreen" of front window) as boolean
+      end try
+      if isFull is false then
+        keystroke "f" using {control down, command down}
+      end if
+    end tell
+  on error
+    -- fallback: no-op
+  end try
+end tell
+OSA
+}
+
+focus_exit_fullscreen_if_needed() {
+  # Si el visor está activo con layout izquierda/derecha, evitar "Full Screen"
+  # mejora mucho que el redimensionado por AppleScript funcione.
+  if [[ "$FOCUS_EDGE_LAYOUT" != "yes" ]]; then
+    return 0
+  fi
+  if ! command -v osascript >/dev/null 2>&1; then
+    return 0
+  fi
+
+  osascript >/dev/null 2>&1 <<OSA
+tell application "${FOCUS_APP}" to activate
+delay 0.1
+tell application "System Events"
+  try
+    tell process "${FOCUS_APP_PROCESS}"
+      set isFull to false
+      try
+        set isFull to (value of attribute "AXFullScreen" of front window) as boolean
+      end try
+      if isFull is true then
+        keystroke "f" using {control down, command down}
+      end if
+    end tell
+  on error
+    -- fallback: no-op
+  end try
+end tell
+OSA
+}
+
+arrange_focus_edge_windows() {
+  if [[ "$FOCUS_EDGE_LAYOUT" != "yes" ]]; then
+    return 0
+  fi
+  if ! command -v osascript >/dev/null 2>&1; then
+    return 1
+  fi
+
+  local edge_proc="${PRESENTATION_APP_PROCESS}"
+  if [[ -z "$edge_proc" ]]; then edge_proc="$PRESENTATION_APP"; fi
+  local focus_proc="${FOCUS_APP_PROCESS}"
+
+  local retries="$WINDOW_LAYOUT_RETRIES"
+  local delay_sec="$WINDOW_LAYOUT_DELAY_SEC"
+  local m="$FOCUS_EDGE_MARGIN_PX"
+
+  for _ in $(seq 1 "$retries"); do
+    focus_exit_fullscreen_if_needed || true
+    osascript >/dev/null 2>&1 <<OSA
+tell application "Finder"
+  set theBounds to bounds of window of desktop
+end tell
+set sx1 to item 1 of theBounds
+set sy1 to item 2 of theBounds
+set sx2 to item 3 of theBounds
+set sy2 to item 4 of theBounds
+set screenW to (sx2 - sx1)
+set screenH to (sy2 - sy1)
+set midX to sx1 + (screenW / 2)
+set leftX1 to (sx1 + $m)
+set leftY1 to (sy1 + $m)
+set leftX2 to (midX - $m)
+set rightX1 to (midX + $m)
+set rightY1 to (sy1 + $m)
+set rightX2 to (sx2 - $m)
+set bottomY to (sy2 - sy1)
+
+tell application "System Events"
+  try
+    tell process "${edge_proc}"
+      set bounds of front window to {leftX1, leftY1, leftX2, bottomY}
+    end tell
+  end try
+  try
+    tell process "${focus_proc}"
+      set bounds of front window to {rightX1, rightY1, rightX2, bottomY}
+    end tell
+  end try
+end tell
+OSA
+    focus_make_front || true
+    sleep "$delay_sec"
+  done
 }
 
 open_presentation() {
@@ -142,8 +362,18 @@ open_presentation() {
   fi
   echo "[INFO] Archivo: $PRESENTATION_FILE"
 
-  # Espera y reintenta para reducir fallos de "timing" al posicionarnos en portada.
+  arrange_windows_left_right || true
+
+  # Espera a que el visor cargue; NO forzamos portada todavía para que la presentación
+  # empiece solo cuando tú pulses ENTER (o inmediatamente si AUTO_NEXT=yes).
   sleep "$PRESENTATION_OPEN_DELAY_SEC"
+
+  arrange_focus_edge_windows || true
+  focus_make_front || true
+}
+
+sync_to_cover() {
+  # Sincroniza la vista en portada (Home) con reintentos por timing.
   for _ in $(seq 1 "$PRESENTATION_FORCE_COVER_RETRIES"); do
     force_cover_slide || true
     sleep "$PRESENTATION_FORCE_COVER_DELAY_SEC"
@@ -161,13 +391,25 @@ advance_slide() {
   if [[ "$SLIDE_KEY" == "space" ]]; then
     script_keycode="49"
   fi
-  osascript >/dev/null 2>&1 <<OSA
+  if [[ "$FOCUS_REACTIVATE_AFTER_SLIDE" == "yes" ]]; then
+    osascript >/dev/null 2>&1 <<OSA
+tell application "$PRESENTATION_APP" to activate
+delay 0.15
+tell application "System Events"
+  key code $script_keycode
+end tell
+delay 0.05
+tell application "${FOCUS_APP}" to activate
+OSA
+  else
+    osascript >/dev/null 2>&1 <<OSA
 tell application "$PRESENTATION_APP" to activate
 delay 0.15
 tell application "System Events"
   key code $script_keycode
 end tell
 OSA
+  fi
   return $?
 }
 
@@ -284,15 +526,25 @@ force_cover_slide() {
   if ! command -v osascript >/dev/null 2>&1; then
     return 1
   fi
-  osascript >/dev/null 2>&1 <<OSA
+  if [[ "$FOCUS_REACTIVATE_AFTER_SLIDE" == "yes" ]]; then
+    osascript >/dev/null 2>&1 <<OSA
 tell application "$PRESENTATION_APP" to activate
 delay 0.25
 tell application "System Events"
   key code 115
-  delay 0.05
+end tell
+delay 0.05
+tell application "${FOCUS_APP}" to activate
+OSA
+  else
+    osascript >/dev/null 2>&1 <<OSA
+tell application "$PRESENTATION_APP" to activate
+delay 0.25
+tell application "System Events"
   key code 115
 end tell
 OSA
+  fi
   return $?
 }
 
@@ -411,16 +663,22 @@ echo "[INFO] Control de diapositivas: $SLIDE_CONTROL (SLIDE_KEY=$SLIDE_KEY)"
 echo "[INFO] TOTAL_STEPS=$TOTAL_STEPS | VALIDATION_STEP=$VALIDATION_STEP"
 
 echo
+# Pantalla completa en la app de foco al arrancar (para grabación más estable).
+focus_fullscreen_on_start || true
+focus_make_front || true
 echo "=== Abrir presentación ==="
+
+if [[ "$AUTO_NEXT" != "yes" ]]; then
+  printf "Pulsa ENTER para abrir la presentación y empezar la secuencia..."
+  read -r _
+fi
+
 start_screen_recording # (si AUTO_SCREEN_RECORD=yes) empieza antes de abrir el visor
 
 open_presentation
 
-if [[ "$AUTO_NEXT" != "yes" ]]; then
-  printf "Pulsa ENTER para iniciar la secuencia de diapositivas..."
-  read -r _
-fi
 # Arranque sincronizado: portada -> diapositiva 1.
+sync_to_cover
 advance_or_warn
 
 for step in $(seq 1 "$TOTAL_STEPS"); do

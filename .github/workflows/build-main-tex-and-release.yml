@@ -1,0 +1,50 @@
+name: Build main.tex PDF and publish to Release (tag)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Compila con latexmk usando el TeX Live que trae la acción.
+      - name: Compile LaTeX (main.tex -> main.pdf)
+        uses: xu-cheng/latex-action@v2
+        with:
+          root_file: main.tex
+          args: -pdf -interaction=nonstopmode
+
+      - name: Rename PDF (avoid main.pdf)
+        id: rename
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG_RAW="${GITHUB_REF_NAME}"
+          TAG_SAFE="${TAG_RAW//\//-}"
+          OUT_PDF="TFM_Memoria_${TAG_SAFE}.pdf"
+          if [[ ! -f "main.pdf" ]]; then
+            echo "main.pdf no existe tras la compilación" >&2
+            exit 1
+          fi
+          mv -f main.pdf "$OUT_PDF"
+          echo "out_pdf=$OUT_PDF" >> "$GITHUB_OUTPUT"
+
+      - name: Publish Release with PDF
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          files: ${{ steps.rename.outputs.out_pdf }}
+          generate_release_notes: true
+
