@@ -59,15 +59,22 @@ if [[ -d "artifacts/recordings" ]]; then
   latest_link="artifacts/recordings/latest_video_demo.mov"
   last_path_file="artifacts/recordings/last_video_demo_path.txt"
 
+  # Preferimos la ruta exacta guardada por `run_demo.sh` (evita copiar el symlink).
   video_src=""
-  if [[ -L "$latest_link" || -f "$latest_link" ]]; then
-    video_src="$latest_link"
-  elif [[ -f "$last_path_file" ]]; then
+  if [[ -f "$last_path_file" ]]; then
     video_src="$(cat "$last_path_file" 2>/dev/null | tr -d '\n' || true)"
+  fi
+  if [[ -z "${video_src:-}" || ! -f "$video_src" ]]; then
+    # Fallback: si existe el fichero/symlink "latest", intenta usarlo.
+    if [[ -L "$latest_link" ]]; then
+      video_src="$(readlink "$latest_link" 2>/dev/null || true)"
+    elif [[ -f "$latest_link" ]]; then
+      video_src="$latest_link"
+    fi
   fi
 
   if [[ -n "${video_src:-}" && -f "$video_src" ]]; then
-    cp "$video_src" "$BUNDLE_DIR/video/$(basename "$video_src")"
+    cp -L "$video_src" "$BUNDLE_DIR/video/$(basename "$video_src")"
     echo "[OK] Copiado vídeo de demo: $video_src"
   else
     echo "[WARN] No existe vídeo grabado (latest_video_demo.mov) para incluir en el bundle."

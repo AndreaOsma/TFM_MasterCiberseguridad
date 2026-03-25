@@ -51,3 +51,6 @@ code/terraform/.terraform.lock.hcl
 *.bcf
 *.synctex.gz
 texput.log
+
+# Instrucciones privadas / no versionadas
+.private/

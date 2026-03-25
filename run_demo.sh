@@ -37,6 +37,10 @@ set -euo pipefail
 #   SCREEN_RECORD_CLEAN_BEFORE=yes|no  # limpia punteros 'latest' antes de grabar
 #   SCREEN_RECORD_STOP_TIMEOUT_SEC=4   # tiempo máximo para parar la grabación
 #   SCREEN_RECORD_VIDEO_MARKER=yes|no  # muestra una notificación visible (osascript) al inicio/fin
+#
+#   PRESENTATION_OPEN_DELAY_SEC=1     # espera tras abrir antes de mandar "Home" / primera navegación
+#   PRESENTATION_FORCE_COVER_RETRIES=3 # reintentos para asegurarnos de caer en portada
+#   PRESENTATION_FORCE_COVER_DELAY_SEC=0.2 # espera entre reintentos
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
@@ -80,6 +84,9 @@ SCREEN_RECORD_LAST_PATH_FILE="${SCREEN_RECORD_LAST_PATH_FILE:-$SCREEN_RECORD_DIR
 SCREEN_RECORD_CLEAN_BEFORE="${SCREEN_RECORD_CLEAN_BEFORE:-yes}"
 SCREEN_RECORD_STOP_TIMEOUT_SEC="${SCREEN_RECORD_STOP_TIMEOUT_SEC:-4}"
 SCREEN_RECORD_VIDEO_MARKER="${SCREEN_RECORD_VIDEO_MARKER:-no}"
+PRESENTATION_OPEN_DELAY_SEC="${PRESENTATION_OPEN_DELAY_SEC:-1}"
+PRESENTATION_FORCE_COVER_RETRIES="${PRESENTATION_FORCE_COVER_RETRIES:-3}"
+PRESENTATION_FORCE_COVER_DELAY_SEC="${PRESENTATION_FORCE_COVER_DELAY_SEC:-0.2}"
 recording_pid=""
 
 mkdir -p artifacts/validation
@@ -134,7 +141,13 @@ open_presentation() {
     echo "[INFO] Presentación abierta con '$PRESENTATION_APP'."
   fi
   echo "[INFO] Archivo: $PRESENTATION_FILE"
-  force_cover_slide
+
+  # Espera y reintenta para reducir fallos de "timing" al posicionarnos en portada.
+  sleep "$PRESENTATION_OPEN_DELAY_SEC"
+  for _ in $(seq 1 "$PRESENTATION_FORCE_COVER_RETRIES"); do
+    force_cover_slide || true
+    sleep "$PRESENTATION_FORCE_COVER_DELAY_SEC"
+  done
 }
 
 advance_slide() {
