@@ -24,7 +24,6 @@ Repositorio del TFM de Máster en Ciberseguridad centrado en mitigar el `Secret 
   - `scripts/render_inventory_from_tf.sh`
 - `artifacts/scripts/`
   - `proxmox_validation_suite.sh`: validación de hipótesis (A/B/C) en Vault/PostgreSQL.
-- Entrada de blog (formato blog, 1-2 páginas).
 - `diagrams/*.png` y `diagrams/*.py`: diagramas del TFM y scripts de generación.
 
 ## Compilación de la memoria (LaTeX)
