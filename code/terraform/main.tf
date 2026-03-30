@@ -32,6 +32,12 @@ resource "proxmox_virtual_environment_container" "lxc_gitea" {
   node_name = var.proxmox_node
   vm_id     = var.vm_ids.gitea
 
+  network_interface {
+    name   = "eth0"
+    bridge = "vmbr0"
+    mtu    = 1350
+  }
+
   initialization {
     # Inyección temprana de clave SSH para evitar acceso por contraseña.
     hostname = "gitea-runner"
@@ -67,6 +73,12 @@ resource "proxmox_virtual_environment_container" "lxc_vault" {
   node_name = var.proxmox_node
   vm_id     = var.vm_ids.vault
 
+  network_interface {
+    name   = "eth0"
+    bridge = "vmbr0"
+    mtu    = 1350
+  }
+
   initialization {
     hostname = "vault-server"
     ip_config {
@@ -100,6 +112,12 @@ resource "proxmox_virtual_environment_container" "lxc_vault" {
 resource "proxmox_virtual_environment_container" "lxc_postgres" {
   node_name = var.proxmox_node
   vm_id     = var.vm_ids.postgres
+
+  network_interface {
+    name   = "eth0"
+    bridge = "vmbr0"
+    mtu    = 1350
+  }
 
   initialization {
     hostname = "postgres-db"
@@ -156,8 +174,14 @@ resource "proxmox_virtual_environment_vm" "vm_k3s" {
     size         = 40
   }
 
+  network_device {
+    bridge = "vmbr0"
+    mtu    = 1350
+  }
+
   initialization {
-    # VM con usuario no-root para alinear con buenas prácticas de acceso.
+    datastore_id = "nvme-data"
+
     ip_config {
       ipv4 {
         address = var.lab_ipv4.k3s

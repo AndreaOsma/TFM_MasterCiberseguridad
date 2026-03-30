@@ -13,7 +13,7 @@ variable "proxmox_insecure" {
 variable "proxmox_node" {
   type        = string
   description = "Nombre del nodo de Proxmox"
-  default     = "pve"
+  default     = "proxmox"
 }
 
 variable "proxmox_username" {

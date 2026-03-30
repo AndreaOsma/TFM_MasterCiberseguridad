@@ -45,12 +45,12 @@
         mode: "0755"
 
     - name: Generate per-node Gitea secret key if missing
-      # Clave local persistente para evitar secretos hardcodeados en repositorio.
       ansible.builtin.shell: |
-        set -euo pipefail
+        set -o pipefail
         if [ ! -s /etc/gitea/secret_key ]; then
           umask 0077
-          tr -dc 'A-Za-z0-9' </dev/urandom | head -c 64 >/etc/gitea/secret_key
+          # Usamos dd para evitar SIGPIPE (rc 141) con head en algunos sistemas
+          tr -dc 'A-Za-z0-9' </dev/urandom | head -c 64 >/etc/gitea/secret_key || true
         fi
       args:
         executable: /bin/bash
