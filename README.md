@@ -8,7 +8,6 @@ Repositorio del TFM de Máster en Ciberseguridad centrado en mitigar el `Secret 
 - Infraestructura como código para laboratorio (`code/terraform`, `code/ansible`, `code/setup_proxmox.sh`).
 - Scripts de validación y demo (`run_demo.sh` y `artifacts/scripts/proxmox_validation_suite.sh`).
 - Diagramas y material visual (`diagrams/*`).
-- Entrada de blog (lenguaje llano, 1-2 páginas).
 
 ## Estructura actual
 
