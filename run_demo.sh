@@ -103,10 +103,13 @@ stop_screen_recording() {
 }
 
 advance_slide() {
-  osascript >/dev/null 2>&1 <<OSA
-tell application "Microsoft Edge" to activate
+  echo "[DEBUG] Avanzando diapositiva..."
+  osascript >/dev/null <<OSA
+tell application "Safari" to activate
+delay 0.5
 tell application "System Events"
-    tell process "Microsoft Edge"
+    tell process "Safari"
+        set frontmost to true
         key code 124
     end tell
 end tell
@@ -114,10 +117,13 @@ OSA
 }
 
 force_cover_slide() {
-  osascript >/dev/null 2>&1 <<OSA
-tell application "Microsoft Edge" to activate
+  echo "[DEBUG] Volviendo a la portada..."
+  osascript >/dev/null <<OSA
+tell application "Safari" to activate
+delay 0.5
 tell application "System Events"
-    tell process "Microsoft Edge"
+    tell process "Safari"
+        set frontmost to true
         key code 115
     end tell
 end tell
@@ -237,8 +243,8 @@ echo " DEMO TFM - INICIO"
 echo "=============================================="
 
 # 1. Generar HTML (Marp)
-EDGE_PATH="/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
-marp "${ROOT_DIR}/docs/presentation/presentacion_tfm_marp.md" -o "$PRESENTATION_FILE" --browser-path "$EDGE_PATH" --allow-local-files >/dev/null 2>&1 || true
+# Nota: Marp CLI usa un motor Chromium interno para PDF, pero para HTML genera el archivo directamente.
+marp "${ROOT_DIR}/docs/presentation/presentacion_tfm_marp.md" -o "$PRESENTATION_FILE" --allow-local-files >/dev/null 2>&1 || true
 
 # 2. Carga Credenciales (Silent)
 export TF_VAR_proxmox_username="tfm-test@pam"
@@ -249,11 +255,11 @@ wait_demo_continue "Pulsa ENTER para empezar la GRABACIÓN..."
 toggle_dnd "on"
 start_screen_recording
 
-# Limpieza de ventanas de Edge y abrir HTML
-osascript >/dev/null 2>&1 <<OSA
-tell application "Microsoft Edge" to if it is running then close windows
+# Limpieza de ventanas de Safari y abrir HTML
+osascript >/dev/null <<OSA
+tell application "Safari" to if it is running then close windows
 OSA
-open -a "Microsoft Edge" "$PRESENTATION_FILE"
+open -a "Safari" "file://$PRESENTATION_FILE"
 sleep 3
 start_webcam
 force_cover_slide
