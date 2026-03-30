@@ -74,14 +74,14 @@ start_screen_recording() {
   if [[ "$AUTO_SCREEN_RECORD" != "yes" ]]; then return 0; fi
   echo "[INFO] Iniciando captura de pantalla y audio (Display 1)..."
   # Usamos -D 1 para el monitor principal y aseguramos el orden de los flags
-  screecapture -v -g -D 1 "$SCREEN_RECORD_FILE" 2>/tmp/screecapture_err.log &
+  screencapture -v -g -D 1 "$SCREEN_RECORD_FILE" 2>/tmp/screencapture_err.log &
   recording_pid="$!"
-  
+
   # Verificamos si el proceso sigue vivo tras 2 segundos (inicialización)
   sleep 2
   if ! kill -0 "$recording_pid" 2>/dev/null; then
     echo "[ERROR] La grabación falló al iniciar. Revisa permisos de 'Grabación de pantalla' para tu Terminal."
-    echo "[DEBUG] Error: $(cat /tmp/screecapture_err.log)"
+    echo "[DEBUG] Error: $(cat /tmp/screencapture_err.log)"
     recording_pid=""
     return 1
   fi
