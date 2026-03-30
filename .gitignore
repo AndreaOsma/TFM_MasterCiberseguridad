@@ -17,6 +17,7 @@ artifacts/presentation/
 presentacion_tfm_marp.md
 presentacion_tfm_marp.pdf
 docs/blog/entrada_blog_tfm.md
+artifacts/release/*
 
 # === Código ===
 !code/
@@ -25,6 +26,7 @@ code/terraform/.terraform/
 code/terraform/*.tfstate*
 code/terraform/*.tfvars
 code/terraform/.terraform.lock.hcl
+package_bundle.sh
 
 # === LaTeX (Fuentes y Memoria) ===
 !main.tex
@@ -53,13 +55,12 @@ code/terraform/.terraform.lock.hcl
 *.synctex.gz
 texput.log
 
-# Instrucciones privadas / no versionadas
 .private/
 
-# Outputs generados por demos/campañas (no versionar)
+# Outputs generados por demos/campañas
 artifacts/validation/
 artifacts/recordings/
 
-# Packs generados localmente (no versionar)
+# Packs generados localmente
 artifacts/release/*.zip
 artifacts/release/*.tar.gz

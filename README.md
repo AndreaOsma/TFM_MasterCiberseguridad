@@ -1,6 +1,6 @@
 # TFM - Gestión dinámica de secretos en entorno on-premise
 
-Repositorio del TFM de Máster en Ciberseguridad centrado en mitigar `Secret Sprawl` con identidad federada, emisión efímera de credenciales y validación reproducible en laboratorio Proxmox.
+Repositorio del TFM de Máster en Ciberseguridad centrado en mitigar el `Secret Sprawl` con identidad federada, emisión efímera de credenciales y validación reproducible en laboratorio Proxmox.
 
 ## Qué incluye este repositorio
 
@@ -9,8 +9,6 @@ Repositorio del TFM de Máster en Ciberseguridad centrado en mitigar `Secret Spr
 - Scripts de validación y demo (`run_demo.sh` y `artifacts/scripts/proxmox_validation_suite.sh`).
 - Diagramas y material visual (`diagrams/*`).
 - Entrada de blog (lenguaje llano, 1-2 páginas).
-- Guion oral de la defensa (12-15 min).
-- Empaquetado de entrega (bundle para defensa).
 
 ## Estructura actual
 
@@ -27,9 +25,7 @@ Repositorio del TFM de Máster en Ciberseguridad centrado en mitigar `Secret Spr
   - `scripts/render_inventory_from_tf.sh`
 - `artifacts/scripts/`
   - `proxmox_validation_suite.sh`: validación de hipótesis (A/B/C) en Vault/PostgreSQL.
-  - `package_release_bundle.sh`: empaquetado de entregable final.
 - Entrada de blog (formato blog, 1-2 páginas).
-- Guion oral de la defensa (12-15 min).
 - `diagrams/*.png` y `diagrams/*.py`: diagramas del TFM y scripts de generación.
 
 ## Compilación de la memoria (LaTeX)
@@ -42,11 +38,9 @@ Ejemplos (según tu herramienta LaTeX instalada):
 latexmk -pdf -interaction=nonstopmode main.tex
 ```
 
-Si no usas `latexmk`, sigue tu flujo estándar de LaTeX (compilación + bib/biber según configuración).
+## Demo
 
-## Demo y empaquetado (público)
-
-Este repo incluye un guion único para automatizar la demo (`run_demo.sh`) y un empaquetador (`artifacts/scripts/package_release_bundle.sh`) para recopilar artefactos.
+Este repo incluye un guión único para automatizar la demo (`run_demo.sh`).
 
 Ejecutar la demo:
 
@@ -60,14 +54,6 @@ Grabar pantalla automáticamente (macOS):
 AUTO_SCREEN_RECORD=yes ./run_demo.sh
 ```
 
-Empaquetar artefactos:
-
-```bash
-bash artifacts/scripts/package_release_bundle.sh
-```
-
-Por defecto, `package_release_bundle.sh` genera un bundle que cumple los requisitos obligatorios de entrega (memoria/paper, presentación, blog, código, y vídeo si existe). Si quieres recortar aún más, usa `BUNDLE_MINIMAL=yes`.
-
 Variables opcionales relevantes:
 - `AUTO_NEXT=yes`: sin pausas interactivas.
 - `SLIDE_CONTROL=no`: no intenta avanzar diapositivas.
@@ -77,6 +63,6 @@ Variables opcionales relevantes:
 - `FOCUS_FULLSCREEN_ON_START=yes` (por defecto): pone la app de enfoque en pantalla completa al arrancar; si activas `FOCUS_LAYOUT=yes`, el script saldrá de fullscreen para poder dejar el visor a la izquierda y la app de enfoque a la derecha.
 - `FOCUS_LAYOUT=yes` (por defecto): mueve la presentación a la izquierda y la app de enfoque a la derecha cuando empieza la presentación.
 - `FOCUS_REACTIVATE_AFTER_SLIDE=yes` (por defecto): vuelve a poner la app de enfoque al frente justo después de enviar teclas al visor.
-- `FOCUS_APP_PROCESS` (por defecto `Code`): process name para AppleScript/System Events (ajústalo si tu app no se llama así).
+- `FOCUS_APP_PROCESS` (por defecto `Code`): process name para AppleScript/System Events.
 - `FOCUS_APP=<app>`: nombre de la app para AppleScript (por defecto `Visual Studio Code`).
 
